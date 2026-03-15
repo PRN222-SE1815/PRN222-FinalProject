@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="BusinessLogic/BusinessLogic.csproj" />
+  <Project Path="BusinessObject/BusinessObject.csproj" />
+  <Project Path="DataAccess/DataAccess.csproj" />
+  <Project Path="Presentation/Presentation.csproj" />
+</Solution>
