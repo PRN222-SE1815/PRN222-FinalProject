@@ -1,0 +1,243 @@
+﻿* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.access-denied-wrapper {
+    width: 100%;
+    max-width: 500px;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.access-denied-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.access-denied-header {
+    text-align: center;
+    padding: 40px 30px 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.logo-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+
+    .logo-icon i {
+        font-size: 40px;
+        color: white;
+    }
+
+.university-name {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.system-name {
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.95;
+    letter-spacing: 0.3px;
+}
+
+.access-denied-content {
+    padding: 50px 40px;
+    text-align: center;
+}
+
+.error-icon {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 30px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 15px rgba(255, 107, 107, 0);
+    }
+}
+
+.error-icon i {
+    font-size: 48px;
+    color: white;
+}
+
+.error-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 15px;
+    letter-spacing: -0.5px;
+}
+
+.error-message {
+    font-size: 16px;
+    color: #718096;
+    line-height: 1.6;
+    margin-bottom: 35px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+.btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+
+.btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.access-denied-footer {
+    padding: 20px;
+    background: #f7fafc;
+    text-align: center;
+    border-top: 1px solid #e2e8f0;
+}
+
+    .access-denied-footer p {
+        font-size: 14px;
+        color: #718096;
+        margin: 0;
+    }
+
+@media (max-width: 600px) {
+    .access-denied-wrapper {
+        max-width: 100%;
+    }
+
+    .access-denied-card {
+        border-radius: 15px;
+    }
+
+    .access-denied-header {
+        padding: 30px 20px 20px;
+    }
+
+    .logo-icon {
+        width: 70px;
+        height: 70px;
+    }
+
+        .logo-icon i {
+            font-size: 35px;
+        }
+
+    .university-name {
+        font-size: 24px;
+    }
+
+    .system-name {
+        font-size: 13px;
+    }
+
+    .access-denied-content {
+        padding: 40px 25px;
+    }
+
+    .error-icon {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 25px;
+    }
+
+        .error-icon i {
+            font-size: 40px;
+        }
+
+    .error-title {
+        font-size: 26px;
+    }
+
+    .error-message {
+        font-size: 15px;
+    }
+
+    .btn-primary {
+        padding: 14px 25px;
+        font-size: 15px;
+    }
+}
+

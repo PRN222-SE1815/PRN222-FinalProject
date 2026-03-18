@@ -1,0 +1,145 @@
+@page "{classSectionId:int}"
+@model Presentation.Areas.Admin.Pages.GradebookManagement.ReviewModel
+@{
+    ViewData["Title"] = "Review Gradebook";
+    var gradebook = Model.Gradebook;
+}
+
+<section class="review-page">
+    <div class="review-container">
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-eye"></i> Review Gradebook</h1>
+                <p class="page-subtitle">Class Section #@Model.ClassSectionId</p>
+            </div>
+            <a asp-page="Index" class="btn btn-back"><i class="fas fa-arrow-left"></i> Back to List</a>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> @Model.SuccessMessage
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        @if (gradebook is not null)
+        {
+            <div class="gradebook-info">
+                <span class="info-label">Gradebook #@gradebook.GradeBookId</span>
+                <span class="status-badge status-@gradebook.Status.ToLower().Replace("_", "-")">@gradebook.Status</span>
+                <span class="info-label">Version: @gradebook.Version</span>
+            </div>
+
+            @if (gradebook.GradeItems.Count == 0)
+            {
+                <div class="empty-state">
+                    <i class="fas fa-clipboard"></i>
+                    <p>No grade items in this gradebook.</p>
+                </div>
+            }
+            else if (Model.EnrollmentRows.Count == 0)
+            {
+                <div class="empty-state">
+                    <i class="fas fa-user-slash"></i>
+                    <p>No grade entries recorded.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrapper">
+                    <table class="grade-table">
+                        <thead>
+                            <tr>
+                                <th class="sticky-col">Enrollment</th>
+                                @foreach (var item in gradebook.GradeItems)
+                                {
+                                    <th>
+                                        <div class="item-header">
+                                            <span class="item-name">@item.ItemName</span>
+                                            <span class="item-meta">Max: @item.MaxScore</span>
+                                            @if (item.Weight.HasValue)
+                                            {
+                                                <span class="item-meta">W: @(item.Weight.Value * 100)%</span>
+                                            }
+                                        </div>
+                                    </th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.EnrollmentRows)
+                            {
+                                <tr id="enrollment-@row.EnrollmentId" class="@(Model.HighlightEnrollmentId == row.EnrollmentId ? "row-focus" : "")">
+                                    <td class="sticky-col">
+                                        <span class="enrollment-id">#@row.EnrollmentId</span>
+                                    </td>
+                                    @foreach (var item in gradebook.GradeItems)
+                                    {
+                                        row.Scores.TryGetValue(item.GradeItemId, out var cellScore);
+                                        <td class="score-cell">
+                                            @if (cellScore.HasValue)
+                                            {
+                                                <span class="score-value">@cellScore.Value.ToString("0.##")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="score-empty">—</span>
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @if (Model.IsPendingApproval)
+            {
+                <div class="decision-section">
+                    <h2 class="decision-title"><i class="fas fa-gavel"></i> Decision</h2>
+
+                    <div class="decision-cards">
+                        <!-- Approve -->
+                        <form method="post" asp-page-handler="Approve" class="decision-card approve-card">
+                            <input type="hidden" name="ClassSectionId" value="@gradebook.ClassSectionId" />
+                            <h3><i class="fas fa-check-circle"></i> Approve</h3>
+                            <input type="text" name="ApproveMessage" class="input-field" placeholder="Optional message..." />
+                            <button type="submit" class="btn btn-approve">
+                                <i class="fas fa-check"></i> Approve & Publish
+                            </button>
+                        </form>
+
+                        <!-- Reject -->
+                        <form method="post" asp-page-handler="Reject" class="decision-card reject-card">
+                            <input type="hidden" name="ClassSectionId" value="@gradebook.ClassSectionId" />
+                            <h3><i class="fas fa-times-circle"></i> Reject</h3>
+                            <input type="text" name="RejectReason" class="input-field" placeholder="Reason is required..." required />
+                            <button type="submit" class="btn btn-reject">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-folder-open"></i>
+                <p>Gradebook not found.</p>
+            </div>
+        }
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Admin/GradebookManagement/Review.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}

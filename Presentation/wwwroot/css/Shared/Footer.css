@@ -1,0 +1,142 @@
+﻿.footer {
+    background: #1E293B;
+    color: #E2E8F0;
+    margin-top: auto;
+    padding: 48px 0 24px;
+}
+
+.footer-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 40px;
+    margin-bottom: 32px;
+}
+
+.footer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 8px 0;
+}
+
+.footer-heading {
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    margin: 0 0 8px 0;
+}
+
+.footer-text {
+    font-size: 14px;
+    color: #CBD5E1;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.footer-links a {
+    color: #CBD5E1;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+    display: inline-block;
+}
+
+.footer-links a:hover {
+    color: #3B82F6;
+}
+
+.footer-social {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #334155;
+    border-radius: 8px;
+    font-size: 20px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.social-link:hover {
+    background: #3B82F6;
+    transform: translateY(-2px);
+}
+
+.footer-bottom {
+    border-top: 1px solid #334155;
+    padding-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.footer-copyright,
+.footer-tech {
+    font-size: 13px;
+    color: #94A3B8;
+    margin: 0;
+}
+
+/* Role-based footer accents */
+body[data-role="ADMIN"] .footer {
+    border-top: 4px solid #3730A3;
+}
+
+body[data-role="TEACHER"] .footer {
+    border-top: 4px solid #0D9488;
+}
+
+body[data-role="STUDENT"] .footer {
+    border-top: 4px solid #2563EB;
+}
+
+@media (max-width: 768px) {
+    .footer {
+        padding: 32px 0 16px;
+    }
+
+    .footer-container {
+        padding: 0 16px;
+    }
+
+    .footer-content {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 24px;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}

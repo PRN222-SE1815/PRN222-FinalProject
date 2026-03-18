@@ -1,0 +1,246 @@
+@page
+@model Presentation.Areas.Admin.Pages.ScheduleManagement.IndexModel
+@{
+    ViewData["Title"] = "Schedule Management";
+    var statuses = new[] { "", "DRAFT", "PUBLISHED", "RESCHEDULED", "CANCELLED", "COMPLETED", "ARCHIVED" };
+}
+
+<section class="schedule-mgmt-page">
+    <div class="schedule-mgmt-container">
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-calendar-alt"></i> Schedule Management</h1>
+                <p class="page-subtitle">View and manage class schedule events</p>
+            </div>
+            <div class="header-stats">
+                <span class="stat-badge">
+                    <i class="fas fa-list"></i>
+                    @Model.SchedulePage.TotalCount total events
+                </span>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-card">
+            <form method="get" class="filter-form">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label class="filter-label" for="filterFrom"><i class="fas fa-calendar-day"></i> From</label>
+                        <input type="datetime-local" id="filterFrom" name="from" class="filter-input"
+                               value="@(Model.From?.ToString("yyyy-MM-ddTHH:mm"))" />
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="filterTo"><i class="fas fa-calendar-day"></i> To</label>
+                        <input type="datetime-local" id="filterTo" name="to" class="filter-input"
+                               value="@(Model.To?.ToString("yyyy-MM-ddTHH:mm"))" />
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="filterSemester"><i class="fas fa-graduation-cap"></i> Semester ID</label>
+                        <input type="number" id="filterSemester" name="semesterId" class="filter-input"
+                               value="@Model.SemesterId" placeholder="e.g. 1" />
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="filterSection"><i class="fas fa-chalkboard"></i> ClassSection ID</label>
+                        <input type="number" id="filterSection" name="classSectionId" class="filter-input"
+                               value="@Model.ClassSectionId" placeholder="e.g. 10" />
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="filterTeacher"><i class="fas fa-user-tie"></i> Teacher ID</label>
+                        <input type="number" id="filterTeacher" name="teacherId" class="filter-input"
+                               value="@Model.TeacherId" placeholder="e.g. 5" />
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="filterStatus"><i class="fas fa-flag"></i> Status</label>
+                        <select id="filterStatus" name="status" class="filter-input filter-select">
+                            @foreach (var s in statuses)
+                            {
+                                <option value="@s" selected="@(s == (Model.Status ?? ""))">
+                                    @(string.IsNullOrEmpty(s) ? "All Statuses" : s)
+                                </option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn-filter"><i class="fas fa-search"></i> Search</button>
+                    <a asp-page="Index" class="btn-clear"><i class="fas fa-eraser"></i> Clear</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Alerts -->
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <span>@err.ErrorMessage</span>
+                }
+            </div>
+        }
+
+        <!-- Data Table -->
+        @if (Model.SchedulePage.Items.Count == 0)
+        {
+            <div class="empty-state">
+                <i class="fas fa-calendar-xmark"></i>
+                <p>No schedule events found matching your criteria.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Course</th>
+                            <th>Section</th>
+                            <th>Semester</th>
+                            <th>Teacher</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.SchedulePage.Items)
+                        {
+                            <tr>
+                                <td class="cell-title">@item.Title</td>
+                                <td><span class="badge badge-code">@item.CourseCode</span></td>
+                                <td><span class="badge badge-section">@item.SectionCode</span></td>
+                                <td>@item.SemesterCode</td>
+                                <td>@item.TeacherName</td>
+                                <td class="cell-date">@item.StartAtUtc.AddHours(7).ToString("yyyy-MM-dd HH:mm")</td>
+                                <td class="cell-date">@item.EndAtUtc.AddHours(7).ToString("yyyy-MM-dd HH:mm")</td>
+                                <td class="text-center">
+                                    @{
+                                        var statusCls = item.Status switch
+                                        {
+                                            "DRAFT" => "ev-draft",
+                                            "PUBLISHED" => "ev-published",
+                                            "RESCHEDULED" => "ev-rescheduled",
+                                            "CANCELLED" => "ev-cancelled",
+                                            "COMPLETED" => "ev-completed",
+                                            "ARCHIVED" => "ev-archived",
+                                            _ => "ev-default"
+                                        };
+                                    }
+                                    <span class="event-status @statusCls">@item.Status</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="action-buttons">
+                                        <a href="#" class="btn-action btn-view" title="View Detail"
+                                           onclick="viewDetail(@item.ScheduleEventId); return false;">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="#" class="btn-action btn-edit" title="Edit (coming soon)">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <div class="paging-bar">
+                    @if (Model.Page > 1)
+                    {
+                        <a asp-page="Index"
+                           asp-route-page="@(Model.Page - 1)"
+                           asp-route-pageSize="@Model.PageSize"
+                           asp-route-from="@Model.From?.ToString("yyyy-MM-ddTHH:mm")"
+                           asp-route-to="@Model.To?.ToString("yyyy-MM-ddTHH:mm")"
+                           asp-route-semesterId="@Model.SemesterId"
+                           asp-route-classSectionId="@Model.ClassSectionId"
+                           asp-route-teacherId="@Model.TeacherId"
+                           asp-route-status="@Model.Status"
+                           class="paging-btn">
+                            <i class="fas fa-chevron-left"></i> Prev
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="paging-btn paging-disabled"><i class="fas fa-chevron-left"></i> Prev</span>
+                    }
+
+                    <span class="paging-info">
+                        Page @Model.SchedulePage.Page of @Model.TotalPages
+                    </span>
+
+                    @if (Model.Page < Model.TotalPages)
+                    {
+                        <a asp-page="Index"
+                           asp-route-page="@(Model.Page + 1)"
+                           asp-route-pageSize="@Model.PageSize"
+                           asp-route-from="@Model.From?.ToString("yyyy-MM-ddTHH:mm")"
+                           asp-route-to="@Model.To?.ToString("yyyy-MM-ddTHH:mm")"
+                           asp-route-semesterId="@Model.SemesterId"
+                           asp-route-classSectionId="@Model.ClassSectionId"
+                           asp-route-teacherId="@Model.TeacherId"
+                           asp-route-status="@Model.Status"
+                           class="paging-btn">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="paging-btn paging-disabled">Next <i class="fas fa-chevron-right"></i></span>
+                    }
+                </div>
+            }
+        }
+    </div>
+</section>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal" style="display:none;">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 class="modal-title" id="detailModalTitle">Event Detail</h3>
+            <button type="button" class="modal-close" onclick="closeDetailModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="detailModalBody">
+            <p class="loading-text"><i class="fas fa-spinner fa-spin"></i> Loading...</p>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/Admin/ScheduleManagement/Index.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script>
+        function viewDetail(eventId) {
+            document.getElementById('detailModalBody').innerHTML = '<p class="loading-text"><i class="fas fa-spinner fa-spin"></i> Loading...</p>';
+            document.getElementById('detailModal').style.display = 'flex';
+            document.getElementById('detailModalTitle').textContent = 'Event #' + eventId;
+            document.getElementById('detailModalBody').innerHTML =
+                '<p style="color:#64748B;font-size:0.9rem;">Detail view for event <strong>#' + eventId + '</strong> will be available in the next phase.</p>';
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        document.getElementById('detailModal')?.addEventListener('click', function (e) {
+            if (e.target === this) closeDetailModal();
+        });
+    </script>
+}

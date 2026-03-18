@@ -1,0 +1,352 @@
+/* Student Grade Appeals Detail - Blue Theme (#2563EB) */
+
+.detail-page {
+    padding: 2rem;
+    min-height: calc(100vh - 200px);
+    background: linear-gradient(135deg, #EFF6FF 0%, #F3F4F6 100%);
+}
+
+.detail-container {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Page Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 10px 40px rgba(37, 99, 235, 0.3);
+}
+
+.header-content {
+    flex: 1;
+}
+
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 0.5rem 0;
+}
+
+.page-title i {
+    margin-right: 0.5rem;
+}
+
+.page-subtitle {
+    font-size: 1rem;
+    color: #DBEAFE;
+    margin: 0;
+}
+
+.header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.header-status-submitted {
+    background: rgba(254, 243, 199, 0.9);
+    color: #92400E;
+}
+
+.header-status-under_review {
+    background: rgba(219, 234, 254, 0.9);
+    color: #1E40AF;
+}
+
+.header-status-approved {
+    background: rgba(209, 250, 229, 0.9);
+    color: #065F46;
+}
+
+.header-status-rejected {
+    background: rgba(254, 226, 226, 0.9);
+    color: #991B1B;
+}
+
+/* Alert */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.alert-error {
+    background: #FEF2F2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
+}
+
+/* Detail Card */
+.detail-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #E2E8F0;
+    overflow: hidden;
+}
+
+.card-header {
+    background: #F8FAFC;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #E2E8F0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.card-header-title {
+    font-weight: 600;
+    color: #1E293B;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-header-title i {
+    color: #2563EB;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Info Rows */
+.info-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #F1F5F9;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    min-width: 150px;
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.info-label i {
+    margin-right: 0.4rem;
+    color: #94A3B8;
+    width: 16px;
+    text-align: center;
+}
+
+.info-value {
+    color: #1E293B;
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+.info-value-secondary {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.82rem;
+    color: #64748B;
+}
+
+.info-value-badge {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #EFF6FF;
+    color: #1D4ED8;
+}
+
+/* Content Block */
+.content-block {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #F8FAFC;
+    border-radius: 10px;
+    border: 1px solid #E2E8F0;
+}
+
+.content-block-label {
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.content-block-label i {
+    color: #94A3B8;
+}
+
+.content-block-text {
+    color: #1E293B;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* Timeline / Progress */
+.timeline-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #E2E8F0;
+    overflow: hidden;
+}
+
+.timeline-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.timeline-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid #F1F5F9;
+    transition: background 0.15s;
+}
+
+.timeline-item:last-child {
+    border-bottom: none;
+}
+
+.timeline-item:hover {
+    background: #F8FAFC;
+}
+
+.timeline-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #1E293B;
+}
+
+.timeline-icon-warning { color: #F59E0B; }
+.timeline-icon-info { color: #3B82F6; }
+.timeline-icon-success { color: #10B981; }
+.timeline-icon-danger { color: #EF4444; }
+
+.timeline-date {
+    font-size: 0.85rem;
+    color: #64748B;
+}
+
+.timeline-date-placeholder {
+    color: #D1D5DB;
+}
+
+/* Response Card */
+.response-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #E2E8F0;
+    overflow: hidden;
+}
+
+.response-text {
+    white-space: pre-wrap;
+    color: #1E293B;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.response-meta {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #F1F5F9;
+    font-size: 0.85rem;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.response-meta i {
+    color: #94A3B8;
+}
+
+/* Back Button */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #F1F5F9;
+    color: #475569;
+    border: 1px solid #E2E8F0;
+    padding: 0.65rem 1.5rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    align-self: flex-start;
+}
+
+.btn-back:hover {
+    background: #E2E8F0;
+    color: #1E293B;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .detail-page {
+        padding: 1rem;
+    }
+
+    .page-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .info-row {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .info-label {
+        min-width: unset;
+    }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+}

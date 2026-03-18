@@ -1,0 +1,97 @@
+@page
+@model Presentation.Pages.Payment.MoMoReturnModel
+@{
+    ViewData["Title"] = Model.IsSuccess ? "Payment Successful" : "Payment Failed";
+}
+
+<section class="payment-return-page">
+    <div class="payment-return-container">
+
+        <div class="payment-return-header @(Model.IsSuccess ? "header-success" : "header-failed")">
+            <div class="header-icon-wrap">
+                @if (Model.IsSuccess)
+                {
+                    <span class="header-icon"><i class="fas fa-check-circle"></i></span>
+                }
+                else
+                {
+                    <span class="header-icon"><i class="fas fa-times-circle"></i></span>
+                }
+            </div>
+            <div class="header-content">
+                <h1 class="payment-title">
+                    @(Model.IsSuccess ? "Payment Successful" : "Payment Failed")
+                </h1>
+                <p class="payment-subtitle">
+                    @(Model.IsSuccess
+                        ? "Your wallet has been topped up successfully."
+                        : "Your deposit could not be completed.")
+                </p>
+            </div>
+            <div class="momo-logo-wrap">
+                <span class="momo-badge"><i class="fas fa-mobile-alt"></i> MoMo</span>
+            </div>
+        </div>
+
+        @if (Model.IsSuccess)
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> Nạp ví thành công! Số dư đã được cập nhật.
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                @(string.IsNullOrEmpty(Model.Message) ? "Giao dịch thất bại hoặc đã bị huỷ." : Model.Message)
+            </div>
+        }
+
+        <div class="payment-detail-card">
+            <h2 class="detail-card-title"><i class="fas fa-receipt"></i> Transaction Details</h2>
+            <div class="detail-grid">
+                <div class="detail-row">
+                    <span class="detail-label"><i class="fas fa-hashtag"></i> Order ID</span>
+                    <span class="detail-value mono">@Model.OrderId</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label"><i class="fas fa-info-circle"></i> Result Code</span>
+                    <span class="detail-value">
+                        <span class="status-badge @(Model.IsSuccess ? "status-success" : "status-failed")">
+                            @if (Model.IsSuccess)
+                            {
+                                <i class="fas fa-check"></i>
+                            }
+                            else
+                            {
+                                <i class="fas fa-times"></i>
+                            }
+                            @Model.ResultCode
+                        </span>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label"><i class="fas fa-comment-alt"></i> Message</span>
+                    <span class="detail-value">@Model.Message</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-row">
+            <a asp-area="Student" asp-page="/Wallet/Deposit" class="btn-action btn-secondary">
+                <i class="fas fa-redo"></i> Deposit Again
+            </a>
+            <a asp-area="Student" asp-page="/CourseRegistration/Index" class="btn-action btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Registration
+            </a>
+        </div>
+
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Shared/Navbar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Payment/MoMoReturn.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}
+

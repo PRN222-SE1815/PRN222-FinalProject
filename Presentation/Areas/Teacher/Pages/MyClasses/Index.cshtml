@@ -1,0 +1,115 @@
+@page
+@model Presentation.Areas.Teacher.Pages.MyClasses.IndexModel
+@{
+    ViewData["Title"] = "My Classes";
+}
+
+<section class="myclasses-page">
+    <div class="myclasses-container">
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-chalkboard-teacher"></i> My Classes</h1>
+                <p class="page-subtitle">View all class sections you are currently teaching.</p>
+            </div>
+        </div>
+
+        <!-- Semester Filter -->
+        @if (Model.Semesters.Count > 0)
+        {
+            <div class="filter-bar">
+                <form method="get" class="semester-filter-form">
+                    <label class="filter-label"><i class="fas fa-calendar-alt"></i> Semester</label>
+                    <select name="SemesterId" class="filter-select" onchange="this.form.submit()">
+                        @foreach (var sem in Model.Semesters)
+                        {
+                            <option value="@sem.SemesterId" selected="@(Model.SemesterId == sem.SemesterId)">@sem.SemesterName</option>
+                        }
+                    </select>
+                </form>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        @if (Model.ClassSections.Count == 0)
+        {
+            <div class="empty-state">
+                <i class="fas fa-folder-open"></i>
+                <p>You are not assigned to any class section.</p>
+            </div>
+        }
+        else
+        {
+            <div class="classes-grid">
+                @foreach (var cs in Model.ClassSections)
+                {
+                    <div class="class-card">
+                        <div class="card-header">
+                            <div class="course-code">@cs.CourseCode</div>
+                            <span class="section-badge">@cs.SectionCode</span>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="course-name">@cs.CourseName</h3>
+                            <div class="card-details">
+                                <div class="detail-row">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>@cs.SemesterName</span>
+                                </div>
+                                <div class="detail-row">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    <span>@cs.Credits credits</span>
+                                </div>
+                                <div class="detail-row">
+                                    <i class="fas fa-users"></i>
+                                    <span>@cs.CurrentEnrollment / @cs.MaxCapacity students</span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(cs.Room))
+                                {
+                                    <div class="detail-row">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span>@cs.Room</span>
+                                    </div>
+                                }
+                            </div>
+                            <div class="card-status-row">
+                                <span class="status-indicator @(cs.IsOpen ? "open" : "closed")">
+                                    <i class="fas @(cs.IsOpen ? "fa-lock-open" : "fa-lock")"></i>
+                                    @(cs.IsOpen ? "Open" : "Closed")
+                                </span>
+                                @if (!string.IsNullOrEmpty(cs.GradebookStatus))
+                                {
+                                    <span class="gradebook-badge gb-@cs.GradebookStatus.ToLower().Replace("_", "-")">
+                                        <i class="fas fa-book"></i> @cs.GradebookStatus
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="gradebook-badge gb-none">
+                                        <i class="fas fa-book"></i> No Gradebook
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a asp-area="Teacher" asp-page="/TeacherGrade/Index"
+                               asp-route-ClassSectionId="@cs.ClassSectionId"
+                               class="btn btn-primary">
+                                <i class="fas fa-pen-to-square"></i> Grading
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Teacher/MyClasses/Index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}

@@ -1,0 +1,216 @@
+@page "{id:long}"
+@model Presentation.Areas.Student.Pages.GradeAppeals.DetailModel
+@{
+    ViewBag.Title = "Chi tiết khiếu nại";
+}
+
+<div class="detail-page">
+    <div class="detail-container">
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <!-- Page Header (error state) -->
+            <div class="page-header">
+                <div class="header-content">
+                    <h1 class="page-title"><i class="fas fa-file-alt"></i> Chi tiết khiếu nại</h1>
+                    <p class="page-subtitle">Không thể tải thông tin khiếu nại</p>
+                </div>
+            </div>
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+            <a asp-area="Student" asp-page="/GradeAppeals/Index" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        }
+
+        @if (Model.Appeal is not null)
+        {
+            var appeal = Model.Appeal;
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="header-content">
+                    <h1 class="page-title"><i class="fas fa-file-alt"></i> Khiếu nại #@appeal.AppealId</h1>
+                    <p class="page-subtitle">@appeal.StudentFullName — @appeal.StudentCode</p>
+                </div>
+                <span class="header-badge @GetHeaderStatusClass(appeal.Status)">
+                    <i class="@GetStatusIcon(appeal.Status)"></i> @GetStatusLabel(appeal.Status)
+                </span>
+            </div>
+
+            <!-- Appeal Info Card -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <span class="card-header-title"><i class="fas fa-info-circle"></i> Thông tin khiếu nại</span>
+                </div>
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <span class="info-label"><i class="fas fa-id-badge"></i> Mã sinh viên</span>
+                            <span class="info-value">@appeal.StudentCode</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label"><i class="fas fa-user"></i> Họ tên</span>
+                            <span class="info-value">@appeal.StudentFullName</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label"><i class="fas fa-school"></i> Lớp học</span>
+                            <span class="info-value">
+                                @if (!string.IsNullOrWhiteSpace(appeal.ClassSectionCode))
+                                {
+                                    <span class="info-value-badge">@appeal.ClassSectionCode</span>
+                                    @if (!string.IsNullOrWhiteSpace(appeal.CourseCode) || !string.IsNullOrWhiteSpace(appeal.CourseName))
+                                    {
+                                        <span class="info-value-secondary">@appeal.CourseCode — @appeal.CourseName</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="info-value-badge">ClassSection #@appeal.ClassSectionId</span>
+                                }
+                            </span>
+                        </div>
+                        @if (appeal.GradeItemId.HasValue)
+                        {
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-pen"></i> Grade Item</span>
+                                <span class="info-value">
+                                    @(appeal.GradeItemName ?? appeal.GradeItemId.ToString())
+                                    <span class="info-value-secondary">
+                                        Điểm hiện tại:
+                                        @if (appeal.GradeItemScore.HasValue)
+                                        {
+                                            <strong>@appeal.GradeItemScore.Value.ToString("0.##")</strong>
+                                            @if (appeal.GradeItemMaxScore.HasValue)
+                                            {
+                                                @: / @appeal.GradeItemMaxScore.Value.ToString("0.##")
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <strong>—</strong>
+                                        }
+                                    </span>
+                                </span>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Appeal Content -->
+                    <div class="content-block">
+                        <div class="content-block-label"><i class="fas fa-comment-alt"></i> Nội dung khiếu nại</div>
+                        <div class="content-block-text">@appeal.AppealContent</div>
+                    </div>
+
+                    <!-- Evidence -->
+                    @if (!string.IsNullOrEmpty(appeal.EvidenceNote))
+                    {
+                        <div class="content-block">
+                            <div class="content-block-label"><i class="fas fa-paperclip"></i> Bằng chứng</div>
+                            <div class="content-block-text">@appeal.EvidenceNote</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="timeline-card">
+                <div class="card-header">
+                    <span class="card-header-title"><i class="fas fa-clock"></i> Tiến trình xử lý</span>
+                </div>
+                <ul class="timeline-list">
+                    <li class="timeline-item">
+                        <span class="timeline-label">
+                            <i class="fas fa-paper-plane timeline-icon-warning"></i> Đã gửi
+                        </span>
+                        <span class="timeline-date">@appeal.SubmittedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                    </li>
+                    @if (appeal.Status is "UNDER_REVIEW" or "APPROVED" or "REJECTED")
+                    {
+                        <li class="timeline-item">
+                            <span class="timeline-label">
+                                <i class="fas fa-search timeline-icon-info"></i> Đang xem xét
+                            </span>
+                            <span class="timeline-date-placeholder">—</span>
+                        </li>
+                    }
+                    @if (appeal.ResolvedAt.HasValue)
+                    {
+                        <li class="timeline-item">
+                            <span class="timeline-label">
+                                @if (appeal.Status == "APPROVED")
+                                {
+                                    <i class="fas fa-check-circle timeline-icon-success"></i> @:Đã chấp nhận
+                                }
+                                else
+                                {
+                                    <i class="fas fa-times-circle timeline-icon-danger"></i> @:Đã từ chối
+                                }
+                            </span>
+                            <span class="timeline-date">@appeal.ResolvedAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            <!-- Response  -->
+            @if (!string.IsNullOrEmpty(appeal.ResponseMessage))
+            {
+                <div class="response-card">
+                    <div class="card-header">
+                        <span class="card-header-title"><i class="fas fa-reply"></i> Phản hồi từ giảng viên</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="response-text">@appeal.ResponseMessage</p>
+                        @if (!string.IsNullOrEmpty(appeal.ResolvedByFullName))
+                        {
+                            <div class="response-meta">
+                                <i class="fas fa-user-tie"></i> Xử lý bởi: @appeal.ResolvedByFullName
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Back Button -->
+            <a asp-area="Student" asp-page="/GradeAppeals/Index" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        }
+
+    </div>
+</div>
+
+@functions {
+    static string GetHeaderStatusClass(string status) => status switch
+    {
+        "SUBMITTED" => "header-status-submitted",
+        "UNDER_REVIEW" => "header-status-under_review",
+        "APPROVED" => "header-status-approved",
+        "REJECTED" => "header-status-rejected",
+        _ => ""
+    };
+
+    static string GetStatusIcon(string status) => status switch
+    {
+        "SUBMITTED" => "fas fa-paper-plane",
+        "UNDER_REVIEW" => "fas fa-search",
+        "APPROVED" => "fas fa-check-circle",
+        "REJECTED" => "fas fa-times-circle",
+        _ => "fas fa-circle"
+    };
+
+    static string GetStatusLabel(string status) => status switch
+    {
+        "SUBMITTED" => "Đã gửi",
+        "UNDER_REVIEW" => "Đang xem xét",
+        "APPROVED" => "Đã chấp nhận",
+        "REJECTED" => "Đã từ chối",
+        _ => status
+    };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Student/GradeAppeals/Detail.css" asp-append-version="true" />
+}

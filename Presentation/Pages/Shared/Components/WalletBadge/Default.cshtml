@@ -1,0 +1,6 @@
+@model decimal
+
+<a asp-area="Student" asp-page="/Wallet/Deposit" class="navbar-wallet-badge" title="Wallet Balance">
+    <span class="navbar-wallet-icon"><i class="fas fa-wallet"></i></span>
+    <span class="navbar-wallet-amount">@Model.ToString("N0") ₫</span>
+</a>

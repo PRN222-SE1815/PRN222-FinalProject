@@ -1,0 +1,125 @@
+/* My Courses — Status badges & Paging */
+
+/* Status badges */
+.enrollment-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.status-enrolled {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.status-pending {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.status-rejected {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.status-dropped {
+    background: #E5E7EB;
+    color: #6B7280;
+}
+
+.status-completed {
+    background: #DBEAFE;
+    color: #1E40AF;
+}
+
+.status-default {
+    background: #F1F5F9;
+    color: #475569;
+}
+
+/* Empty state */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    color: #94A3B8;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Paging */
+.paging-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.5rem 0 0.5rem;
+}
+
+.paging-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    background: #2563EB;
+    color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.paging-btn:hover {
+    background: #1D4ED8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    color: #ffffff;
+}
+
+.paging-disabled {
+    background: #E2E8F0;
+    color: #94A3B8;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.paging-disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.paging-info {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #64748B;
+}
+
+/* Filter bar */
+.filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}

@@ -1,0 +1,73 @@
+﻿@{
+    var currentYear = DateTime.Now.Year;
+    var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+}
+
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3 class="footer-title">TPF University</h3>
+                <p class="footer-text">Modern Student Management System</p>
+                <p class="footer-text">Empowering Education Through Technology</p>
+            </div>
+
+            <div class="footer-section">
+                <h4 class="footer-heading">Quick Links</h4>
+                <ul class="footer-links">
+                    @if (userRole == "ADMIN")
+                    {
+                        <li><a asp-area="Admin" asp-page="/UserManagement/Create">User Management</a></li>
+                        <li><a href="#">Courses</a></li>
+                        <li><a href="#">Reports</a></li>
+                    }
+                    else if (userRole == "TEACHER")
+                    {
+                        <li><a href="#">My Classes</a></li>
+                        <li><a href="#">Grading</a></li>
+                        <li><a href="#">Resources</a></li>
+                    }
+                    else if (userRole == "STUDENT")
+                    {
+                        <li><a href="#">My Courses</a></li>
+                        <li><a href="#">Registration</a></li>
+                        <li><a href="#">Grades</a></li>
+                    }
+                    else
+                    {
+                        <li><a asp-page="/Account/Login">Login</a></li>
+                    }
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4 class="footer-heading">Support</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4 class="footer-heading">Connect</h4>
+                <div class="footer-social">
+                    <a href="#" class="social-link" title="Facebook">📘</a>
+                    <a href="#" class="social-link" title="Twitter">🐦</a>
+                    <a href="#" class="social-link" title="LinkedIn">💼</a>
+                    <a href="#" class="social-link" title="Instagram">📷</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p class="footer-copyright">
+                © @currentYear TPF University. All rights reserved.
+            </p>
+            <p class="footer-tech">
+                Built with ASP.NET Core MVC | Powered by .NET 8
+            </p>
+        </div>
+    </div>
+</footer>

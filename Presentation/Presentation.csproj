@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>c8ed8d1b-18ca-423b-906a-0ea80c17a7ed</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +22,13 @@
   <ItemGroup>
     <ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
     <ProjectReference Include="..\BusinessObject\BusinessObject.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Areas\Admin\Pages\UserManagement\" />
+    <Folder Include="wwwroot\css\Admin\UserManagement\" />
+    <Folder Include="wwwroot\css\Student\Wallet\" />
+    <Folder Include="wwwroot\css\Teacher\TeacherSchedule\" />
   </ItemGroup>
 
 </Project>

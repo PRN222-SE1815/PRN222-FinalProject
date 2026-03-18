@@ -1,0 +1,416 @@
+.gradebook-page {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.gradebook-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0F766E;
+}
+
+.page-title i {
+    margin-right: 0.5rem;
+}
+
+.page-subtitle {
+    color: #6B7280;
+    margin-top: 0.25rem;
+}
+
+/* Alerts */
+.alert {
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.alert-success {
+    background: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+}
+
+.alert-error {
+    background: #FEF2F2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
+}
+
+/* Back Button */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #D1D5DB;
+    border-radius: 0.5rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #374151;
+    background: #fff;
+    text-decoration: none;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-back:hover {
+    background: #F3F4F6;
+    border-color: #9CA3AF;
+}
+
+/* Input Field */
+.input-field {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #D1D5DB;
+    border-radius: 0.375rem;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-field:focus {
+    border-color: #0F766E;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+}
+
+/* Info Bar */
+.gradebook-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: #F0FDFA;
+    border-radius: 0.75rem;
+    border: 1px solid #99F6E4;
+    flex-wrap: wrap;
+}
+
+.appeal-focus-bar {
+    background: #FFF7ED;
+    border: 1px solid #FDBA74;
+    border-radius: 0.75rem;
+    padding: 0.9rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.appeal-focus-title {
+    color: #9A3412;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.appeal-score-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+}
+
+.quick-score-label {
+    font-size: 0.85rem;
+    color: #9A3412;
+    font-weight: 600;
+}
+
+.quick-score-input {
+    width: 120px;
+    padding: 0.4rem 0.55rem;
+    border-radius: 0.4rem;
+    border: 1px solid #FDBA74;
+    font-size: 0.9rem;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.info-value {
+    color: #0F766E;
+    font-weight: 500;
+    margin-right: 0.5rem;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.status-draft {
+    background: #F3F4F6;
+    color: #6B7280;
+}
+
+.status-pending-approval {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.status-rejected {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.status-published {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.status-locked {
+    background: #DBEAFE;
+    color: #1E40AF;
+}
+
+.status-archived {
+    background: #E5E7EB;
+    color: #6B7280;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #9CA3AF;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+/* Table */
+.table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.75rem;
+}
+
+.grade-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.grade-table thead {
+    background: #0F766E;
+    color: #fff;
+}
+
+.grade-table thead th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.grade-table thead th.sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #0F766E;
+}
+
+.grade-table tbody td {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.grade-table tbody td.sticky-col {
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 1;
+    font-weight: 600;
+    color: #374151;
+}
+
+.grade-table tbody tr:hover {
+    background: #F0FDFA;
+}
+
+.grade-table tbody tr.row-focus {
+    background: #FFFBEB;
+}
+
+.score-cell-focus {
+    background: #FEF3C7;
+    box-shadow: inset 0 0 0 1px #F59E0B;
+}
+
+.item-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.item-name {
+    font-weight: 600;
+}
+
+.item-meta {
+    font-size: 0.75rem;
+    opacity: 0.85;
+    font-weight: 400;
+}
+
+.sync-icon {
+    color: #F59E0B;
+    font-size: 0.75rem;
+}
+
+.enrollment-id {
+    font-family: monospace;
+}
+
+/* Student Info in Enrollment Column */
+.student-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 140px;
+}
+
+.student-name {
+    font-weight: 600;
+    color: #1F2937;
+    font-size: 0.88rem;
+    line-height: 1.3;
+}
+
+.student-code {
+    font-size: 0.78rem;
+    color: #6B7280;
+    font-family: monospace;
+}
+
+/* Score Input */
+.score-cell {
+    min-width: 90px;
+}
+
+.score-input {
+    width: 80px;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #D1D5DB;
+    border-radius: 0.375rem;
+    font-size: 0.9rem;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.score-input:focus {
+    border-color: #0F766E;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+}
+
+.score-input:disabled {
+    background: #F3F4F6;
+    color: #9CA3AF;
+    cursor: not-allowed;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: #0F766E;
+    color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #0D9488;
+}
+
+.btn-accent {
+    background: #F59E0B;
+    color: #fff;
+}
+
+.btn-accent:hover:not(:disabled) {
+    background: #D97706;
+}
+
+/* Action Bar */
+.action-bar {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 1rem;
+}
+
+/* Review Form */
+.review-form {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #E5E7EB;
+}
+
+.review-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.review-section label {
+    font-weight: 600;
+    color: #374151;
+}
+
+.review-section .input-field {
+    flex: 1;
+    min-width: 200px;
+}

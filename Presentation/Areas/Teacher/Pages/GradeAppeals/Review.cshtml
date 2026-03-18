@@ -1,0 +1,263 @@
+@page "{id:long}"
+@model Presentation.Areas.Teacher.Pages.GradeAppeals.ReviewModel
+@{
+    ViewBag.Title = "Xem xét khiếu nại";
+}
+
+<div class="review-page">
+    <div class="review-container">
+
+        <!-- Alerts -->
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> @Model.SuccessMessage
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        @if (Model.Appeal is not null)
+        {
+            var appeal = Model.Appeal;
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="header-content">
+                    <h1 class="page-title"><i class="fas fa-gavel"></i> Xem xét khiếu nại #@appeal.AppealId</h1>
+                    <p class="page-subtitle">@appeal.StudentFullName (@appeal.StudentCode)</p>
+                </div>
+                <span class="header-badge @GetHeaderStatusClass(appeal.Status)">
+                    <i class="@GetStatusIcon(appeal.Status)"></i> @GetStatusLabel(appeal.Status)
+                </span>
+            </div>
+
+            <!-- Appeal Detail Card -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <span class="card-header-title"><i class="fas fa-info-circle"></i> Thông tin khiếu nại</span>
+                </div>
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <span class="info-label"><i class="fas fa-user"></i> Sinh viên</span>
+                            <span class="info-value">@appeal.StudentFullName (@appeal.StudentCode)</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label"><i class="fas fa-school"></i> Lớp học</span>
+                            <span class="info-value">
+                                <a asp-area="Teacher"
+                                   asp-page="/TeacherGrade/Index"
+                                   asp-route-ClassSectionId="@appeal.ClassSectionId"
+                                   asp-route-HighlightEnrollmentId="@appeal.EnrollmentId"
+                                   asp-route-HighlightGradeItemId="@appeal.GradeItemId"
+                                   asp-route-AppealId="@appeal.AppealId"
+                                   asp-route-PrefillNewScore="@Model.ResolveInput.NewScore"
+                                   asp-fragment="enrollment-@appeal.EnrollmentId"
+                                   class="btn-classsection-link">
+                                    <i class="fas fa-table"></i>
+                                    @(string.IsNullOrWhiteSpace(appeal.ClassSectionCode)
+                                        ? $"ClassSection #{appeal.ClassSectionId}"
+                                        : $"{appeal.CourseCode} - {appeal.ClassSectionCode}")
+                                </a>
+                            </span>
+                        </div>
+                        @if (appeal.GradeItemId.HasValue)
+                        {
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-pen"></i> Grade Item</span>
+                                <span class="info-value">@(appeal.GradeItemName ?? appeal.GradeItemId.ToString())</span>
+                            </div>
+                        }
+                        <div class="info-row">
+                            <span class="info-label"><i class="fas fa-calendar"></i> Ngày gửi</span>
+                            <span class="info-value">@appeal.SubmittedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                    </div>
+
+                    <!-- Appeal Content -->
+                    <div class="content-block">
+                        <div class="content-block-label"><i class="fas fa-comment-alt"></i> Nội dung khiếu nại</div>
+                        <div class="content-block-text">@appeal.AppealContent</div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(appeal.EvidenceNote))
+                    {
+                        <div class="content-block">
+                            <div class="content-block-label"><i class="fas fa-paperclip"></i> Bằng chứng</div>
+                            <div class="content-block-text">@appeal.EvidenceNote</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Action: Start Review -->
+            @if (appeal.Status == "SUBMITTED")
+            {
+                <form method="post" asp-page-handler="StartReview" asp-route-id="@appeal.AppealId">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-start-review">
+                        <i class="fas fa-play-circle"></i> Bắt đầu xem xét
+                    </button>
+                </form>
+            }
+            else if (appeal.Status == "UNDER_REVIEW")
+            {
+                <!-- Resolve Form -->
+                <div class="action-card">
+                    <div class="action-card-header">
+                        <i class="fas fa-check-double"></i> Xử lý khiếu nại
+                    </div>
+                    <div class="action-card-body">
+
+                        @if (ViewData.ModelState.ErrorCount > 0)
+                        {
+                            <div class="validation-errors">
+                                <div asp-validation-summary="All"></div>
+                            </div>
+                        }
+
+                        <form method="post" asp-page-handler="Resolve">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" asp-for="ResolveInput.AppealId" />
+
+                            <div class="action-card-body">
+                                <div class="form-group">
+                                    <label asp-for="ResolveInput.Outcome" class="form-label">
+                                        Kết quả <span class="required">*</span>
+                                    </label>
+                                    <select asp-for="ResolveInput.Outcome" class="form-select">
+                                        <option value="">-- Chọn kết quả --</option>
+                                        <option value="APPROVED">Chấp nhận</option>
+                                        <option value="REJECTED">Từ chối</option>
+                                    </select>
+                                    <span asp-validation-for="ResolveInput.Outcome" class="field-validation-error"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="ResolveInput.ResponseMessage" class="form-label">
+                                        Phản hồi <span class="required">*</span>
+                                    </label>
+                                    <textarea asp-for="ResolveInput.ResponseMessage" class="form-textarea" rows="4"
+                                              placeholder="Nhập nội dung phản hồi cho sinh viên..."></textarea>
+                                    <span asp-validation-for="ResolveInput.ResponseMessage" class="field-validation-error"></span>
+                                </div>
+
+                                <div id="score-update-block" class="score-update-block @(Model.ResolveInput.Outcome == "APPROVED" ? "" : "hidden")">
+                                    <div class="score-update-title">
+                                        <i class="fas fa-pen-to-square"></i> Cập nhật điểm mới (chỉ khi chọn Chấp nhận)
+                                    </div>
+                                    <div class="form-group">
+                                        <label asp-for="ResolveInput.NewScore" class="form-label">Điểm mới</label>
+                                        <input asp-for="ResolveInput.NewScore" class="form-input" type="number" step="0.01"
+                                               placeholder="Nhập điểm mới nếu cần cập nhật" />
+                                        <span asp-validation-for="ResolveInput.NewScore" class="field-validation-error"></span>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn-resolve">
+                                    <i class="fas fa-check"></i> Xử lý khiếu nại
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Already Resolved -->
+                @if (!string.IsNullOrEmpty(appeal.ResponseMessage))
+                {
+                    <div class="response-card">
+                        <div class="card-header">
+                            <span class="card-header-title"><i class="fas fa-reply"></i> Kết quả xử lý</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="response-text">@appeal.ResponseMessage</p>
+                            <div class="response-meta-group">
+                                @if (!string.IsNullOrEmpty(appeal.ResolvedByFullName))
+                                {
+                                    <div class="response-meta">
+                                        <i class="fas fa-user-tie"></i> Xử lý bởi: @appeal.ResolvedByFullName
+                                    </div>
+                                }
+                                @if (appeal.ResolvedAt.HasValue)
+                                {
+                                    <div class="response-meta">
+                                        <i class="fas fa-calendar-check"></i> Ngày xử lý: @appeal.ResolvedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+
+            <!-- Back Button -->
+            <a asp-area="Teacher" asp-page="/GradeAppeals/Queue" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Quay lại hàng đợi
+            </a>
+        }
+
+    </div>
+</div>
+
+@functions {
+    static string GetHeaderStatusClass(string status) => status switch
+    {
+        "SUBMITTED" => "header-status-submitted",
+        "UNDER_REVIEW" => "header-status-under_review",
+        "APPROVED" => "header-status-approved",
+        "REJECTED" => "header-status-rejected",
+        _ => ""
+    };
+
+    static string GetStatusIcon(string status) => status switch
+    {
+        "SUBMITTED" => "fas fa-paper-plane",
+        "UNDER_REVIEW" => "fas fa-search",
+        "APPROVED" => "fas fa-check-circle",
+        "REJECTED" => "fas fa-times-circle",
+        _ => "fas fa-circle"
+    };
+
+    static string GetStatusLabel(string status) => status switch
+    {
+        "SUBMITTED" => "Đã gửi",
+        "UNDER_REVIEW" => "Đang xem xét",
+        "APPROVED" => "Đã chấp nhận",
+        "REJECTED" => "Đã từ chối",
+        _ => status
+    };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Teacher/GradeAppeals/Review.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            const outcomeSelect = document.getElementById('ResolveInput_Outcome');
+            const scoreBlock = document.getElementById('score-update-block');
+            const newScoreInput = document.getElementById('ResolveInput_NewScore');
+            if (!outcomeSelect || !scoreBlock) return;
+
+            const toggleScoreBlock = () => {
+                const isApproved = outcomeSelect.value === 'APPROVED';
+                scoreBlock.classList.toggle('hidden', !isApproved);
+                if (!isApproved && newScoreInput) {
+                    newScoreInput.value = '';
+                }
+            };
+
+            outcomeSelect.addEventListener('change', toggleScoreBlock);
+            toggleScoreBlock();
+        })();
+    </script>
+}

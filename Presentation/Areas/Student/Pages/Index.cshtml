@@ -1,0 +1,91 @@
+﻿@page
+@using System.Security.Claims
+@model Presentation.Areas.Student.Pages.IndexModel
+@{
+    ViewData["Title"] = "Student Dashboard";
+    var userName = User.Identity?.Name ?? "Student";
+    var studentId = User.FindFirst("StudentId")?.Value ?? "";
+}
+
+<section class="student-dashboard">
+    <div class="dashboard-container">
+        <!-- Welcome Header -->
+        <div class="welcome-section">
+            <div class="welcome-content">
+                <h1 class="welcome-title">Welcome back, <span class="user-highlight">@userName</span>!</h1>
+                <p class="welcome-subtitle">Access your courses, schedule, and connect with your classmates.</p>
+            </div>
+            <div class="welcome-icon">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+        </div>
+
+        <!-- Navigation Cards -->
+        <div class="nav-cards-section">
+            <h2 class="section-title">Actions</h2>
+            <div class="nav-cards-grid">
+                <!-- Course Registration -->
+                <a asp-area="Student" asp-page="/CourseRegistration/Index" class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">Course Registration</h3>
+                        <p class="nav-card-description">Browse available courses and register for the upcoming semester.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- View Grades -->
+                <a asp-area="Student" asp-page="/StudentGrade/Index" class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">My Grades</h3>
+                        <p class="nav-card-description">View your grades and academic performance for all courses.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- View Schedule -->
+                <a asp-area="Student" asp-page="/StudentSchedule/Index" class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">View Schedule</h3>
+                        <p class="nav-card-description">Check your class schedule, room assignments, and upcoming events.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- Chat Room -->
+                <a asp-page="/Chat/Index" class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">Chat Room</h3>
+                        <p class="nav-card-description">Connect with classmates and teachers in course chat rooms.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Student/Index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}

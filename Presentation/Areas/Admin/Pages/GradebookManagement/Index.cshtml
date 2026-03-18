@@ -1,0 +1,146 @@
+@page
+@model Presentation.Areas.Admin.Pages.GradebookManagement.IndexModel
+@{
+    ViewData["Title"] = "Gradebook Management";
+}
+
+<section class="admin-gradebook-page">
+    <div class="admin-gradebook-container">
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-clipboard-check"></i> Gradebook Management</h1>
+                <p class="page-subtitle">Review pending approvals and manage published gradebooks.</p>
+            </div>
+            <span class="stat-badge"><i class="fas fa-list"></i> @Model.TotalCount gradebook(s)</span>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> @Model.SuccessMessage
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        <!-- Status Filter Tabs -->
+        <div class="filter-bar">
+            <a asp-page="Index" asp-route-StatusFilter="PENDING_APPROVAL"
+               class="filter-chip @(Model.StatusFilter == "PENDING_APPROVAL" ? "active" : "")">
+                <i class="fas fa-hourglass-half"></i> Pending Approval
+            </a>
+            <a asp-page="Index" asp-route-StatusFilter="PUBLISHED"
+               class="filter-chip @(Model.StatusFilter == "PUBLISHED" ? "active" : "")">
+                <i class="fas fa-check-circle"></i> Published
+            </a>
+            <a asp-page="Index" asp-route-StatusFilter="DRAFT"
+               class="filter-chip @(Model.StatusFilter == "DRAFT" ? "active" : "")">
+                <i class="fas fa-pencil-alt"></i> Draft
+            </a>
+            <a asp-page="Index" asp-route-StatusFilter="LOCKED"
+               class="filter-chip @(Model.StatusFilter == "LOCKED" ? "active" : "")">
+                <i class="fas fa-lock"></i> Locked
+            </a>
+            <a asp-page="Index" asp-route-StatusFilter="ALL"
+               class="filter-chip @(Model.StatusFilter == "ALL" ? "active" : "")">
+                <i class="fas fa-th-list"></i> All
+            </a>
+        </div>
+
+        <!-- Gradebook Table -->
+        @if (Model.Gradebooks.Count == 0)
+        {
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>No gradebooks found for the selected filter.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Section</th>
+                            <th>Course</th>
+                            <th>Semester</th>
+                            <th>Teacher</th>
+                            <th class="text-center">Version</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Updated</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var gb in Model.Gradebooks)
+                        {
+                            var isPending = string.Equals(gb.Status, "PENDING_APPROVAL", StringComparison.OrdinalIgnoreCase);
+                            <tr class="@(isPending ? "row-highlight" : "")">
+                                <td><span class="badge badge-id">#@gb.GradeBookId</span></td>
+                                <td><span class="badge badge-section">@gb.ClassSection.SectionCode</span></td>
+                                <td>@gb.ClassSection.Course.CourseCode — @gb.ClassSection.Course.CourseName</td>
+                                <td>@gb.ClassSection.Semester.SemesterName</td>
+                                <td>@gb.ClassSection.Teacher.TeacherNavigation.FullName</td>
+                                <td class="text-center">@gb.Version</td>
+                                <td class="text-center">
+                                    <span class="status-badge status-@gb.Status.ToLower().Replace("_", "-")">@gb.Status</span>
+                                </td>
+                                <td class="text-center">@((gb.UpdatedAt ?? gb.CreatedAt).ToString("MMM dd, yyyy"))</td>
+                                <td class="text-center">
+                                    @if (isPending)
+                                    {
+                                        <a asp-page="Review" asp-route-classSectionId="@gb.ClassSectionId" class="btn btn-review btn-sm">
+                                            <i class="fas fa-gavel"></i> Review
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-page="Review" asp-route-classSectionId="@gb.ClassSectionId" class="btn btn-view btn-sm">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <div class="pagination">
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <a asp-page="Index" asp-route-StatusFilter="@Model.StatusFilter"
+                           asp-route-CurrentPage="@(Model.CurrentPage - 1)"
+                           class="page-btn"><i class="fas fa-chevron-left"></i></a>
+                    }
+                    @for (var p = Math.Max(1, Model.CurrentPage - 2); p <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); p++)
+                    {
+                        <a asp-page="Index" asp-route-StatusFilter="@Model.StatusFilter"
+                           asp-route-CurrentPage="@p"
+                           class="page-btn @(p == Model.CurrentPage ? "active" : "")">@p</a>
+                    }
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <a asp-page="Index" asp-route-StatusFilter="@Model.StatusFilter"
+                           asp-route-CurrentPage="@(Model.CurrentPage + 1)"
+                           class="page-btn"><i class="fas fa-chevron-right"></i></a>
+                    }
+                    <span class="page-info">Page @Model.CurrentPage / @Model.TotalPages (@Model.TotalCount total)</span>
+                </div>
+            }
+        }
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Admin/GradebookManagement/Index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}

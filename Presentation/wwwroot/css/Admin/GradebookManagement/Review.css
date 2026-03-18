@@ -1,0 +1,294 @@
+.review-page {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.review-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1E293B;
+}
+
+.page-title i {
+    margin-right: 0.5rem;
+}
+
+.page-subtitle {
+    color: #64748B;
+    margin-top: 0.25rem;
+}
+
+/* Alerts */
+.alert {
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.alert-success {
+    background: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+}
+
+.alert-error {
+    background: #FEF2F2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
+}
+
+/* Info Bar */
+.gradebook-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: #F8FAFC;
+    border-radius: 0.75rem;
+    border: 1px solid #E2E8F0;
+    flex-wrap: wrap;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #334155;
+    font-size: 0.95rem;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-flex;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-draft { background: #F1F5F9; color: #64748B; }
+.status-pending-approval { background: #FEF3C7; color: #92400E; }
+.status-rejected { background: #FEE2E2; color: #991B1B; }
+.status-published { background: #D1FAE5; color: #065F46; }
+.status-locked { background: #DBEAFE; color: #1E40AF; }
+.status-archived { background: #E5E7EB; color: #6B7280; }
+
+/* Table */
+.table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #E2E8F0;
+    border-radius: 0.75rem;
+}
+
+.grade-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.grade-table thead {
+    background: #1E293B;
+    color: #fff;
+}
+
+.grade-table thead th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.grade-table thead th.sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #1E293B;
+}
+
+.grade-table tbody td {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #F1F5F9;
+}
+
+.grade-table tbody td.sticky-col {
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 1;
+    font-weight: 600;
+    color: #334155;
+}
+
+.grade-table tbody tr:hover {
+    background: #F8FAFC;
+}
+
+.grade-table tbody tr.row-focus {
+    background: #FEF3C7;
+}
+
+.grade-table tbody tr.row-focus td {
+    box-shadow: inset 0 -1px 0 #FDE68A;
+}
+
+.item-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.item-name { font-weight: 600; }
+.item-meta { font-size: 0.75rem; opacity: 0.85; font-weight: 400; }
+.sync-icon { color: #F59E0B; font-size: 0.75rem; }
+.enrollment-id { font-family: monospace; }
+.score-value { color: #1E293B; font-weight: 500; }
+.score-empty { color: #CBD5E1; }
+.score-cell { min-width: 80px; text-align: center; }
+
+/* Decision Section */
+.decision-section {
+    margin-top: 1rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #E2E8F0;
+}
+
+.decision-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1E293B;
+    margin-bottom: 1rem;
+}
+
+.decision-title i {
+    margin-right: 0.5rem;
+}
+
+.decision-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.decision-card {
+    background: #fff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.approve-card {
+    border: 2px solid #A7F3D0;
+}
+
+.approve-card h3 {
+    color: #065F46;
+}
+
+.reject-card {
+    border: 2px solid #FECACA;
+}
+
+.reject-card h3 {
+    color: #991B1B;
+}
+
+.input-field {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #CBD5E1;
+    border-radius: 0.375rem;
+    font-size: 0.95rem;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s;
+}
+
+.input-field:focus {
+    border-color: #3730A3;
+    box-shadow: 0 0 0 3px rgba(55, 48, 163, 0.1);
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-back {
+    background: #F1F5F9;
+    color: #334155;
+    border: 1px solid #CBD5E1;
+}
+
+.btn-back:hover {
+    background: #E2E8F0;
+}
+
+.btn-approve {
+    background: #065F46;
+    color: #fff;
+    align-self: flex-start;
+}
+
+.btn-approve:hover {
+    background: #047857;
+}
+
+.btn-reject {
+    background: #EF4444;
+    color: #fff;
+    align-self: flex-start;
+}
+
+.btn-reject:hover {
+    background: #DC2626;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #94A3B8;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .decision-cards {
+        grid-template-columns: 1fr;
+    }
+}

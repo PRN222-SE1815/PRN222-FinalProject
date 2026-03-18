@@ -1,0 +1,46 @@
+﻿@using System.Security.Claims
+@{
+    var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "";
+    var hideFooter = ViewBag.HideFooter ?? false;
+
+    var roleCss = userRole switch
+    {
+        "ADMIN"   => "~/css/Shared/Layout/_LayoutAdmin.css",
+        "TEACHER" => "~/css/Shared/Layout/_LayoutTeacher.css",
+        _         => "~/css/Shared/Layout/_LayoutStudent.css"
+    };
+    var roleLabel = userRole switch
+    {
+        "ADMIN"   => "Admin",
+        "TEACHER" => "Teacher",
+        _         => "Student"
+    };
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - TPF University @roleLabel</title>
+    <link rel="stylesheet" href="@roleCss" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Shared/Navbar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Shared/Footer.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+</head>
+<body data-role="@userRole" class="@(hideFooter ? "no-footer" : "")">
+    <div class="layout-wrapper">
+        @await Html.PartialAsync("Navbar")
+
+        <main class="main-content">
+            @RenderBody()
+        </main>
+
+        @if (!hideFooter)
+        {
+            @await Html.PartialAsync("Footer")
+        }
+    </div>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

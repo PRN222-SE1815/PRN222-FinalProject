@@ -1,0 +1,59 @@
+﻿* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #F3F4F6;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.layout-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* No footer mode for chat */
+body.no-footer {
+    height: 100vh;
+    overflow: hidden;
+}
+
+body.no-footer .layout-wrapper {
+    height: 100vh;
+    overflow: hidden;
+}
+
+body.no-footer .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        padding: 16px;
+    }
+    
+    body.no-footer .main-content {
+        padding: 0;
+    }
+}

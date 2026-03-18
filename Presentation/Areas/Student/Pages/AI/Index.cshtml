@@ -1,0 +1,104 @@
+@page
+@model Presentation.Areas.Student.Pages.AI.IndexModel
+@{
+    ViewData["Title"] = "AI Study Assistant";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/AI/Index.css" asp-append-version="true" />
+}
+
+<section class="ai-page">
+    <div class="ai-container">
+        <!-- Header -->
+        <div class="ai-header">
+            <div class="ai-header-left">
+                <h1 class="ai-title"><i class="fas fa-robot"></i> AI Study Assistant</h1>
+                <p class="ai-subtitle">Get personalized academic insights powered by AI</p>
+            </div>
+            <div class="ai-header-actions">
+                <div class="purpose-selector">
+                    <label for="purposeSelect" class="purpose-label">
+                        <i class="fas fa-bullseye"></i> Purpose
+                    </label>
+                    <select id="purposeSelect" class="purpose-select">
+                        <option value="SCORE_SUMMARY">Score Summary</option>
+                        <option value="STUDY_PLAN">Study Plan</option>
+                        <option value="COURSE_SUGGESTION">Course Suggestion</option>
+                    </select>
+                </div>
+                <button type="button" id="aiNewSessionBtn" class="btn-new-session">
+                    <i class="fas fa-plus"></i> New Session
+                </button>
+            </div>
+        </div>
+
+        <!-- Alert Area -->
+        <div id="aiAlertArea" class="ai-alert-area" style="display:none;">
+            <div id="aiAlertContent" class="ai-alert"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="ai-main">
+            <!-- Left Panel -->
+            <aside class="ai-sidebar">
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title"><i class="fas fa-lightbulb"></i> Quick Tips</h3>
+                    <ul class="sidebar-tips">
+                        <li><strong>Score Summary</strong> — Analyze your grades, credits, and risk indicators.</li>
+                        <li><strong>Study Plan</strong> — Get a personalized short-term and mid-term study roadmap.</li>
+                        <li><strong>Course Suggestion</strong> — Discover next-semester courses with prerequisite checks.</li>
+                    </ul>
+                </div>
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title"><i class="fas fa-info-circle"></i> How it works</h3>
+                    <p class="sidebar-text">Select a purpose, start a new session, and ask your question. The AI assistant uses your academic data to provide accurate, data-driven answers.</p>
+                </div>
+                <div class="sidebar-card" id="sessionInfoCard" style="display:none;">
+                    <h3 class="sidebar-title"><i class="fas fa-clock"></i> Current Session</h3>
+                    <p class="sidebar-text" id="sessionInfoText"></p>
+                </div>
+            </aside>
+
+            <!-- Chat Panel -->
+            <div class="ai-chat-panel">
+                <!-- Empty State -->
+                <div id="aiEmptyState" class="ai-empty-state">
+                    <div class="empty-icon"><i class="fas fa-comments"></i></div>
+                    <h2>Start a conversation</h2>
+                    <p>Select a purpose and click <strong>New Session</strong> to begin chatting with your AI assistant.</p>
+                </div>
+
+                <!-- Chat Container -->
+                <div id="aiChatContainer" class="ai-chat-container" style="display:none;">
+                    <div id="aiMessageList" class="ai-message-list"></div>
+
+                    <div class="ai-input-area">
+                        <div class="ai-input-wrapper">
+                            <textarea id="aiMessageInput"
+                                      class="ai-textarea"
+                                      placeholder="Type your message... (Enter to send, Shift+Enter for new line)"
+                                      rows="1"
+                                      maxlength="4000"></textarea>
+                            <button type="button" id="aiSendBtn" class="btn-send" disabled>
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <div id="aiLoadingIndicator" class="ai-loading" style="display:none;">
+                            <div class="loading-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="loading-text">AI is thinking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script src="~/js/ai-chat.js" asp-append-version="true"></script>
+}

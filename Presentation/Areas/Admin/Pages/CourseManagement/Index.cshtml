@@ -1,0 +1,480 @@
+@page
+@using BusinessLogic.DTOs.Responses.CourseManagement
+@model Presentation.Areas.Admin.Pages.CourseManagement.IndexModel
+@{
+    ViewData["Title"] = "Course Management";
+
+    var items = Model.CoursePage?.Items?
+        .OfType<CourseListItemResponse>()
+        .ToList() ?? new List<CourseListItemResponse>();
+
+    var totalCount = Model.CoursePage?.TotalCount ?? 0;
+    var currentPage = Model.CoursePage?.Page ?? 1;
+    var pageSize = Model.CoursePage?.PageSize ?? 20;
+    var totalPages = pageSize > 0 ? (int)Math.Ceiling((double)totalCount / pageSize) : 1;
+}
+
+<section class="course-mgmt-page">
+    <div class="course-mgmt-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-graduation-cap"></i> Course Management</h1>
+                <p class="page-subtitle">Manage courses, view class sections, and control course availability</p>
+            </div>
+            <div class="header-actions">
+                <span class="stat-badge">
+                    <i class="fas fa-book"></i>
+                    @totalCount courses
+                </span>
+                <button type="button" class="btn-create" onclick="openCreateModal()">
+                    <i class="fas fa-plus"></i> New Course
+                </button>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> @Model.SuccessMessage
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <form method="get" class="filter-form">
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input type="text" name="Keyword" value="@Model.Keyword" placeholder="Course code or name..." class="filter-input" />
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select name="IsActive" class="filter-select">
+                        <option value="">All</option>
+                        <option value="true" selected="@(Model.IsActive == true)">Active</option>
+                        <option value="false" selected="@(Model.IsActive == false)">Inactive</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Semester</label>
+                    <select name="SemesterId" class="filter-select">
+                        <option value="">All Semesters</option>
+                        @foreach (var sem in Model.Semesters)
+                        {
+                            <option value="@sem.SemesterId" selected="@(Model.SemesterId == sem.SemesterId)">
+                                @sem.SemesterName @(sem.IsActive ? "★" : "")
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Per page</label>
+                    <select name="PageSize" class="filter-select filter-select-sm">
+                        @foreach (var ps in new[] { 10, 20, 50 })
+                        {
+                            <option value="@ps" selected="@(pageSize == ps)">@ps</option>
+                        }
+                    </select>
+                </div>
+                <input type="hidden" name="CurrentPage" value="1" />
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </form>
+        </div>
+
+        <!-- Course Table -->
+        @if (items.Count == 0)
+        {
+            <div class="empty-state">
+                <i class="fas fa-folder-open"></i>
+                <p>No courses found matching your criteria.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-wrapper">
+                <table class="data-table" id="courseTable">
+                    <thead>
+                        <tr>
+                            <th style="width:40px"></th>
+                            <th>Code</th>
+                            <th>Course Name</th>
+                            <th class="text-center">Credits</th>
+                            <th class="text-center">Sections</th>
+                            <th>Semesters</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in items)
+                        {
+                            <tr data-course-id="@c.CourseId">
+                                <td class="text-center">
+                                    @if (c.ClassSectionCount > 0)
+                                    {
+                                        <button type="button" class="btn-expand" title="View sections"
+                                                onclick="toggleSections(@c.CourseId, this)">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </button>
+                                    }
+                                </td>
+                                <td><span class="badge badge-code">@c.CourseCode</span></td>
+                                <td class="course-name-cell">@c.CourseName</td>
+                                <td class="text-center">@c.Credits</td>
+                                <td class="text-center">@c.ClassSectionCount</td>
+                                <td class="semester-cell">
+                                    @if (c.SemesterNames.Count > 0)
+                                    {
+                                        @foreach (var sem in c.SemesterNames)
+                                        {
+                                            <span class="badge badge-semester">@sem</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (c.IsActive)
+                                    {
+                                        <span class="status-badge status-active">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-inactive">Inactive</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="action-buttons">
+                                        <button type="button" class="btn-edit" title="Edit"
+                                                onclick="openEditModal(@c.CourseId)">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                        @if (c.IsActive)
+                                        {
+                                            <button type="button" class="btn-deactivate" title="Deactivate"
+                                                    onclick="openDeactivateModal(@c.CourseId, '@c.CourseCode.Replace("'", "\\'")' )">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Expandable Sections Row -->
+                            <tr class="sections-row" id="sections-@c.CourseId" style="display:none;">
+                                <td colspan="8" class="sections-cell">
+                                    <div class="sections-container" id="sections-content-@c.CourseId">
+                                        <div class="sections-loading"><i class="fas fa-spinner fa-spin"></i> Loading sections...</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (totalPages > 1)
+            {
+                <div class="pagination">
+                    @if (currentPage > 1)
+                    {
+                        <a asp-page="/CourseManagement/Index" asp-area="Admin"
+                           asp-route-Keyword="@Model.Keyword" asp-route-IsActive="@Model.IsActive"
+                           asp-route-SemesterId="@Model.SemesterId"
+                           asp-route-CurrentPage="@(currentPage - 1)" asp-route-PageSize="@pageSize"
+                           class="page-btn"><i class="fas fa-chevron-left"></i></a>
+                    }
+                    @for (var p = Math.Max(1, currentPage - 2); p <= Math.Min(totalPages, currentPage + 2); p++)
+                    {
+                        <a asp-page="/CourseManagement/Index" asp-area="Admin"
+                           asp-route-Keyword="@Model.Keyword" asp-route-IsActive="@Model.IsActive"
+                           asp-route-SemesterId="@Model.SemesterId"
+                           asp-route-CurrentPage="@p" asp-route-PageSize="@pageSize"
+                           class="page-btn @(p == currentPage ? "active" : "")">@p</a>
+                    }
+                    @if (currentPage < totalPages)
+                    {
+                        <a asp-page="/CourseManagement/Index" asp-area="Admin"
+                           asp-route-Keyword="@Model.Keyword" asp-route-IsActive="@Model.IsActive"
+                           asp-route-SemesterId="@Model.SemesterId"
+                           asp-route-CurrentPage="@(currentPage + 1)" asp-route-PageSize="@pageSize"
+                           class="page-btn"><i class="fas fa-chevron-right"></i></a>
+                    }
+                    <span class="page-info">Page @currentPage / @totalPages (@totalCount total)</span>
+                </div>
+            }
+        }
+    </div>
+</section>
+
+<!-- Create Modal -->
+<div class="modal-overlay" id="createModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2><i class="fas fa-plus-circle"></i> Create New Course</h2>
+            <button type="button" class="modal-close" onclick="closeModal('createModal')">&times;</button>
+        </div>
+        <form method="post" asp-page-handler="Create">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Course Code <span class="required">*</span></label>
+                    <input type="text" name="CreateRequest.CourseCode" required maxlength="50" placeholder="e.g. PRN222" class="form-input" />
+                </div>
+                <div class="form-group">
+                    <label>Course Name <span class="required">*</span></label>
+                    <input type="text" name="CreateRequest.CourseName" required maxlength="200" placeholder="e.g. Advanced .NET Programming" class="form-input" />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Credits <span class="required">*</span></label>
+                        <input type="number" name="CreateRequest.Credits" required min="1" max="10" value="3" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label>Active</label>
+                        <select name="CreateRequest.IsActive" class="form-input">
+                            <option value="true" selected>Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Semester</label>
+                    <select name="CreateRequest.SemesterId" class="form-input">
+                        <option value="">— Select semester —</option>
+                        @foreach (var sem in Model.FutureSemesters)
+                        {
+                            <option value="@sem.SemesterId">@sem.SemesterName</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="CreateRequest.Description" rows="3" placeholder="Course description..." class="form-input"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('createModal')">Cancel</button>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-check"></i> Create
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2><i class="fas fa-pen"></i> Edit Course</h2>
+            <button type="button" class="modal-close" onclick="closeModal('editModal')">&times;</button>
+        </div>
+        <form method="post" asp-page-handler="Update">
+            <div class="modal-body">
+                <input type="hidden" name="UpdateRequest.CourseId" id="editCourseId" />
+                <div class="form-group">
+                    <label>Course Code <span class="required">*</span></label>
+                    <input type="text" name="UpdateRequest.CourseCode" id="editCourseCode" required maxlength="50" class="form-input" />
+                </div>
+                <div class="form-group">
+                    <label>Course Name <span class="required">*</span></label>
+                    <input type="text" name="UpdateRequest.CourseName" id="editCourseName" required maxlength="200" class="form-input" />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Credits <span class="required">*</span></label>
+                        <input type="number" name="UpdateRequest.Credits" id="editCredits" required min="1" max="10" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label>Active</label>
+                        <select name="UpdateRequest.IsActive" id="editIsActive" class="form-input">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="UpdateRequest.Description" id="editDescription" rows="3" class="form-input"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Content HTML</label>
+                    <textarea name="UpdateRequest.ContentHtml" id="editContentHtml" rows="3" class="form-input"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Learning Path JSON</label>
+                    <textarea name="UpdateRequest.LearningPathJson" id="editLearningPathJson" rows="3" class="form-input"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('editModal')">Cancel</button>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Deactivate Modal -->
+<div class="modal-overlay" id="deactivateModal">
+    <div class="modal modal-sm">
+        <div class="modal-header modal-header-danger">
+            <h2><i class="fas fa-exclamation-triangle"></i> Deactivate Course</h2>
+            <button type="button" class="modal-close" onclick="closeModal('deactivateModal')">&times;</button>
+        </div>
+        <form method="post" asp-page-handler="Deactivate">
+            <div class="modal-body">
+                <p class="deactivate-warning">
+                    Are you sure you want to deactivate course <strong id="deactivateCourseCode"></strong>?
+                    This will close all open sections and drop active enrollments.
+                </p>
+                <input type="hidden" name="DeactivateRequest.CourseId" id="deactivateCourseId" />
+                <input type="hidden" name="DeactivateRequest.DropActiveEnrollments" value="true" />
+                <div class="form-group">
+                    <label>Reason (recommended)</label>
+                    <textarea name="DeactivateRequest.Reason" rows="2" placeholder="Reason for deactivation..." class="form-input"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('deactivateModal')">Cancel</button>
+                <button type="submit" class="btn-danger">
+                    <i class="fas fa-ban"></i> Deactivate
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Admin/CourseManagement/Index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}
+
+@section Scripts {
+    <script>
+        function openCreateModal() {
+            document.getElementById('createModal').classList.add('open');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        async function openEditModal(courseId) {
+            try {
+                var response = await fetch('?handler=Detail&courseId=' + courseId);
+                var result = await response.json();
+                if (result.success && result.data) {
+                    var d = result.data;
+                    document.getElementById('editCourseId').value = d.courseId;
+                    document.getElementById('editCourseCode').value = d.courseCode || '';
+                    document.getElementById('editCourseName').value = d.courseName || '';
+                    document.getElementById('editCredits').value = d.credits;
+                    document.getElementById('editIsActive').value = d.isActive ? 'true' : 'false';
+                    document.getElementById('editDescription').value = d.description || '';
+                    document.getElementById('editContentHtml').value = d.contentHtml || '';
+                    document.getElementById('editLearningPathJson').value = d.learningPathJson || '';
+                    document.getElementById('editModal').classList.add('open');
+                } else {
+                    alert(result.message || 'Failed to load course detail.');
+                }
+            } catch (e) {
+                alert('Failed to load course detail.');
+            }
+        }
+
+        function openDeactivateModal(courseId, courseCode) {
+            document.getElementById('deactivateCourseId').value = courseId;
+            document.getElementById('deactivateCourseCode').textContent = courseCode;
+            document.getElementById('deactivateModal').classList.add('open');
+        }
+
+        // Close modal on overlay click
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('open');
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.open').forEach(function (m) {
+                    m.classList.remove('open');
+                });
+            }
+        });
+
+        // Auto-dismiss alerts after 6s
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.alert').forEach(function (alert) {
+                setTimeout(function () {
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    setTimeout(function () { alert.remove(); }, 300);
+                }, 6000);
+            });
+        });
+
+        // Expandable class sections
+        var loadedSections = {};
+        async function toggleSections(courseId, btn) {
+            var row = document.getElementById('sections-' + courseId);
+            var icon = btn.querySelector('i');
+            if (row.style.display === 'none') {
+                row.style.display = '';
+                icon.className = 'fas fa-chevron-down';
+                if (!loadedSections[courseId]) {
+                    try {
+                        var resp = await fetch('?handler=Sections&courseId=' + courseId);
+                        var result = await resp.json();
+                        var container = document.getElementById('sections-content-' + courseId);
+                        if (result.success && result.data && result.data.length > 0) {
+                            var html = '<table class="sections-table">';
+                            html += '<thead><tr><th>Section</th><th>Semester</th><th>Room</th><th class="text-center">Enrolled</th><th class="text-center">Status</th></tr></thead><tbody>';
+                            result.data.forEach(function (s) {
+                                var statusClass = s.isOpen ? 'status-active' : 'status-inactive';
+                                var statusText = s.isOpen ? 'Open' : 'Closed';
+                                html += '<tr>';
+                                html += '<td><strong>' + escapeHtml(s.sectionCode) + '</strong></td>';
+                                html += '<td>' + escapeHtml(s.semesterName) + '</td>';
+                                html += '<td>' + escapeHtml(s.room) + '</td>';
+                                html += '<td class="text-center"><span class="enrollment-count">' + s.currentEnrollment + ' / ' + s.maxCapacity + '</span></td>';
+                                html += '<td class="text-center"><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>';
+                                html += '</tr>';
+                            });
+                            html += '</tbody></table>';
+                            container.innerHTML = html;
+                        } else {
+                            container.innerHTML = '<p class="sections-empty">No class sections found.</p>';
+                        }
+                        loadedSections[courseId] = true;
+                    } catch (e) {
+                        document.getElementById('sections-content-' + courseId).innerHTML = '<p class="sections-empty">Failed to load sections.</p>';
+                    }
+                }
+            } else {
+                row.style.display = 'none';
+                icon.className = 'fas fa-chevron-right';
+            }
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+}

@@ -1,0 +1,289 @@
+﻿@page "{roomId:int?}"
+@model Presentation.Pages.Chat.IndexModel
+@{
+    ViewBag.Title = "Chat";
+    ViewBag.HideFooter = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Chat/chat.css" asp-append-version="true" />
+    <style>
+        .app-content {
+            padding: 0 !important;
+        }
+        .chat-container {
+            height: calc(100vh - var(--header-height)) !important;
+            max-height: calc(100vh - var(--header-height)) !important;
+            border-radius: 0;
+        }
+    </style>
+}
+
+<div class="chat-container">
+    <!-- ==================== Sidebar: Room List ==================== -->
+    <aside class="chat-sidebar" id="chatSidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-comments"></i> Chats</h2>
+            <button type="button" class="btn-icon" id="btnNewChat" title="New conversation">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- Room search -->
+        <div class="sidebar-search">
+            <input type="text" id="roomSearchInput" placeholder="Search rooms..." autocomplete="off" />
+        </div>
+
+        <!-- Room list -->
+        <ul class="room-list" id="roomList">
+            @if (Model.Rooms.Count == 0)
+            {
+                <li class="room-empty">No conversations yet.</li>
+            }
+            else
+            {
+                @foreach (var room in Model.Rooms)
+                {
+                    var isActive = Model.SelectedRoom?.RoomId == room.RoomId;
+                    <li class="room-item @(isActive ? "active" : "")"
+                        data-room-id="@room.RoomId"
+                        data-room-type="@room.RoomType"
+                        onclick="selectRoom(@room.RoomId)">
+                        <div class="room-icon">
+                            @if (room.RoomType == "DM")
+                            {
+                                <i class="fas fa-user"></i>
+                            }
+                            else if (room.RoomType == "GROUP")
+                            {
+                                <i class="fas fa-users"></i>
+                            }
+                            else if (room.RoomType == "CLASS")
+                            {
+                                <i class="fas fa-chalkboard"></i>
+                            }
+                            else
+                            {
+                                <i class="fas fa-book"></i>
+                            }
+                        </div>
+                        <div class="room-info">
+                            <span class="room-name">@room.RoomName</span>
+                            <span class="room-type-badge">@room.RoomType</span>
+                        </div>
+                    </li>
+                }
+            }
+        </ul>
+    </aside>
+
+    <!-- ==================== Main Chat Area ==================== -->
+    <section class="chat-main" id="chatMain">
+        @if (Model.SelectedRoom is not null)
+        {
+            <!-- Chat header -->
+            <div class="chat-header" id="chatHeader">
+                <button type="button" class="btn-icon btn-back-mobile" id="btnBackToRooms" onclick="showSidebar()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="chat-header-info">
+                    <h3 id="chatRoomName">@Model.SelectedRoom.RoomName</h3>
+                    <span class="chat-room-type" id="chatRoomType">@Model.SelectedRoom.RoomType</span>
+                    <span class="chat-room-status @(Model.SelectedRoom.Status != "ACTIVE" ? "status-warning" : "")"
+                          id="chatRoomStatus">@Model.SelectedRoom.Status</span>
+                </div>
+            </div>
+
+            <!-- Messages area -->
+            <div class="chat-messages" id="chatMessages">
+                <div id="loadMoreContainer" class="load-more-container" style="display:none;">
+                    <button type="button" class="btn-load-more" id="btnLoadMore" onclick="loadOlderMessages()">
+                        <i class="fas fa-arrow-up"></i> Load older messages
+                    </button>
+                </div>
+                @if (Model.Messages.Items.Count == 0)
+                {
+                    <div class="no-messages" id="noMessagesPlaceholder">
+                        <i class="fas fa-comment-slash"></i>
+                        <p>No messages yet. Start the conversation!</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var msg in Model.Messages.Items)
+                    {
+                        var isMine = msg.SenderId == Model.CurrentUserId;
+                        var isDeleted = msg.DeletedAt.HasValue;
+                        <div class="message-row @(isMine ? "mine" : "theirs") @(isDeleted ? "deleted" : "")"
+                             data-message-id="@msg.MessageId"
+                             data-sender-id="@msg.SenderId">
+                            <div class="message-bubble">
+                                @if (isDeleted)
+                                {
+                                    <span class="message-deleted-text"><i class="fas fa-ban"></i> This message was deleted</span>
+                                }
+                                else
+                                {
+                                    @if (!isMine)
+                                    {
+                                        <span class="message-sender">@msg.SenderName</span>
+                                    }
+                                    <span class="message-content">@msg.Content</span>
+                                    @if (msg.Attachments.Count > 0)
+                                    {
+                                        <div class="message-attachments">
+                                            @foreach (var att in msg.Attachments)
+                                            {
+                                                var imgExts = new[] { "jpg", "jpeg", "png", "gif", "webp" };
+                                                var isImage = imgExts.Contains(att.FileType.ToLower());
+                                                @if (isImage)
+                                                {
+                                                    <a href="@att.FileUrl" target="_blank" class="attachment-image-link">
+                                                        <img src="@att.FileUrl" alt="@att.OriginalName" class="attachment-thumbnail" />
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <a href="@att.FileUrl" target="_blank" class="attachment-file-link">
+                                                        <i class="fas fa-file"></i>
+                                                        <span>@(string.IsNullOrEmpty(att.OriginalName) ? att.FileType : att.OriginalName)</span>
+                                                    </a>
+                                                }
+                                            }
+                                        </div>
+                                    }
+                                    @if (msg.EditedAt.HasValue)
+                                    {
+                                        <span class="message-edited">(edited)</span>
+                                    }
+                                }
+                                <span class="message-time">@msg.CreatedAt.ToString("MMM dd, HH:mm")</span>
+                            </div>
+                            @{
+                                var canDelete = (!isDeleted) && isMine;
+                                var canEdit = (!isDeleted) && isMine;
+                            }
+                            @if (canEdit || canDelete)
+                            {
+                                <div class="message-actions">
+                                    @if(canEdit)
+                                    {
+                                        <button type="button" class="btn-msg-action" title="Edit"
+                                                onclick="startEditMessage(@msg.MessageId)">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                    }
+                                    @if(canDelete)
+                                    {
+                                        <button type="button" class="btn-msg-action btn-danger" title="Delete"
+                                                onclick="deleteMessage(@msg.MessageId)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- Message input -->
+            <div class="chat-input-area" id="chatInputArea">
+                <div class="edit-indicator" id="editIndicator" style="display:none;">
+                    <span>Editing message...</span>
+                    <button type="button" class="btn-cancel-edit" onclick="cancelEdit()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+                <!-- File previews -->
+                <div class="attachment-preview-bar" id="attachmentPreviewBar" style="display:none;"></div>
+                <form id="messageForm" onsubmit="return handleSendMessage(event);">
+                    <input type="file" id="chatFileInput" multiple style="display:none;" onchange="handleFileSelect(event)" />
+                    <div class="input-row">
+                        <label class="btn-attach" for="fileInput" title="Attach file">
+                            <i class="fas fa-paperclip"></i>
+                        </label>
+                        <input type="file" id="fileInput" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.mp4,.mp3" style="display:none;" onchange="handleFileSelected(event)" />
+                        <input type="text" id="messageInput" placeholder="Type a message..."
+                               autocomplete="off" maxlength="2000" />
+                        <button type="submit" class="btn-send" id="btnSend" title="Send">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        }
+        else
+        {
+            <!-- No room selected -->
+            <div class="chat-empty-state">
+                <i class="fas fa-comments"></i>
+                <h3>Welcome to Chat</h3>
+                <p>Select a conversation or start a new one.</p>
+            </div>
+        }
+    </section>
+</div>
+
+<!-- ==================== New Chat Modal ==================== -->
+<div class="modal-overlay" id="newChatModal" style="display:none;">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3>New Conversation</h3>
+            <button type="button" class="btn-icon" onclick="closeNewChatModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- Tabs: DM / Group -->
+            <div class="modal-tabs">
+                <button type="button" class="tab-btn active" data-tab="dm" onclick="switchTab('dm')">
+                    <i class="fas fa-user"></i> Direct Message
+                </button>
+                <button type="button" class="tab-btn" data-tab="group" onclick="switchTab('group')">
+                    <i class="fas fa-users"></i> Group Chat
+                </button>
+            </div>
+
+            <!-- DM Tab -->
+            <div class="tab-content active" id="tabDm">
+                <div class="search-input-group">
+                    <input type="text" id="userSearchInput" placeholder="Search users..."
+                           autocomplete="off" oninput="searchUsers()" />
+                </div>
+                <ul class="user-search-results" id="userSearchResults">
+                    <li class="search-placeholder">Type to search for users...</li>
+                </ul>
+            </div>
+
+            <!-- Group Tab -->
+            <div class="tab-content" id="tabGroup">
+                <div class="form-group">
+                    <label for="groupNameInput">Group Name</label>
+                    <input type="text" id="groupNameInput" placeholder="Enter group name..." maxlength="100" />
+                </div>
+                <div class="search-input-group">
+                    <input type="text" id="groupUserSearchInput" placeholder="Search users to add..."
+                           autocomplete="off" oninput="searchGroupUsers()" />
+                </div>
+                <ul class="user-search-results" id="groupUserSearchResults">
+                    <li class="search-placeholder">Type to search for users...</li>
+                </ul>
+                <div class="selected-members" id="selectedMembers">
+                    <!-- chips for selected members -->
+                </div>
+                <button type="button" class="btn-primary" onclick="createGroupRoom()">
+                    <i class="fas fa-plus"></i> Create Group
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden data for JS -->
+<input type="hidden" id="currentUserId" value="@Model.CurrentUserId" />
+<input type="hidden" id="selectedRoomId" value="@(Model.SelectedRoom?.RoomId ?? 0)" />
+<input type="hidden" id="currentUserRole" value="@(Model.SelectedRoom?.CurrentUserRole ?? "")" />
+
+<script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js" asp-append-version="true"></script>
+<script src="~/js/chat.js" asp-append-version="true"></script>

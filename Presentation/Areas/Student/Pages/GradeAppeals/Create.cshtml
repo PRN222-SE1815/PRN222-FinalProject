@@ -1,0 +1,123 @@
+@page
+@model Presentation.Areas.Student.Pages.GradeAppeals.CreateModel
+@{
+    ViewBag.Title = "Tạo khiếu nại điểm";
+}
+
+<div class="create-appeal-page">
+    <div class="create-appeal-container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-plus-circle"></i> Tạo khiếu nại điểm</h1>
+                <p class="page-subtitle">Điền thông tin bên dưới để gửi khiếu nại điểm số cho môn đã chọn</p>
+            </div>
+            <span class="header-icon"><i class="fas fa-file-signature"></i></span>
+        </div>
+
+        <!-- Validation Summary -->
+        @if (ViewData.ModelState.ErrorCount > 0)
+        {
+            <div class="validation-errors">
+                <div asp-validation-summary="All"></div>
+            </div>
+        }
+
+        <!-- Form -->
+        <form method="post">
+            @Html.AntiForgeryToken()
+            <input asp-for="SemesterId" type="hidden" />
+            <input asp-for="Input.EnrollmentId" type="hidden" />
+            <input asp-for="Input.GradeBookId" type="hidden" />
+
+            <div class="form-card">
+                <div class="form-card-header">
+                    <i class="fas fa-info-circle"></i> Thông tin khiếu nại
+                </div>
+                <div class="form-card-body">
+
+                    <div class="appeal-policy-note">
+                        <i class="fas fa-circle-info"></i>
+                        Mỗi sinh viên chỉ được gửi <strong>một khiếu nại duy nhất</strong> cho mỗi gradebook.
+                    </div>
+
+                    <div class="appeal-context">
+                        <span class="context-course">@Model.CourseCode</span>
+                        <span class="context-name">@Model.CourseName</span>
+                        <span class="context-section">@Model.SectionCode</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Input.SelectedGradeItemIds" class="form-label">
+                            Chọn Grade Item (tuỳ chọn, có thể chọn nhiều)
+                        </label>
+                        <div class="grade-item-options">
+                            @if (Model.GradeItemOptions.Count == 0)
+                            {
+                                <div class="grade-item-empty">Không có grade item khả dụng.</div>
+                            }
+                            else
+                            {
+                                @foreach (var option in Model.GradeItemOptions)
+                                {
+                                    <label class="grade-item-option">
+                                        <input type="checkbox"
+                                               name="Input.SelectedGradeItemIds"
+                                               value="@option.GradeItemId"
+                                               @(Model.Input.SelectedGradeItemIds.Contains(option.GradeItemId) ? "checked" : null) />
+                                        <span>
+                                            <strong>@option.ItemName</strong>
+                                            <small>
+                                                <span class="grade-item-score">@(option.CurrentScore?.ToString("0.##") ?? "—")</span>
+                                                / @option.MaxScore.ToString("0.##")
+                                                @(option.Weight.HasValue ? $"• {option.Weight.Value * 100:0.##}%" : "")
+                                            </small>
+                                        </span>
+                                    </label>
+                                }
+                            }
+                        </div>
+                        <span class="form-hint">Không chọn nếu bạn muốn khiếu nại toàn bộ bảng điểm.</span>
+                        <span asp-validation-for="Input.SelectedGradeItemIds" class="field-validation-error"></span>
+                    </div>
+
+                    <hr class="form-divider" />
+
+                    <div class="form-group">
+                        <label asp-for="Input.AppealContent" class="form-label">
+                            Nội dung khiếu nại <span class="required">*</span>
+                        </label>
+                        <textarea asp-for="Input.AppealContent" class="form-textarea" rows="5"
+                                  placeholder="Mô tả chi tiết nội dung khiếu nại của bạn..."></textarea>
+                        <span asp-validation-for="Input.AppealContent" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Input.EvidenceNote" class="form-label">
+                            Bằng chứng / Ghi chú
+                        </label>
+                        <textarea asp-for="Input.EvidenceNote" class="form-textarea" rows="3"
+                                  placeholder="Cung cấp bằng chứng hoặc ghi chú bổ sung (tuỳ chọn)..."></textarea>
+                        <span asp-validation-for="Input.EvidenceNote" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-paper-plane"></i> Gửi khiếu nại
+                        </button>
+                        <a asp-area="Student" asp-page="/GradeAppeals/Index" asp-route-SemesterId="@Model.SemesterId" class="btn-back">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Student/GradeAppeals/Create.css" asp-append-version="true" />
+}

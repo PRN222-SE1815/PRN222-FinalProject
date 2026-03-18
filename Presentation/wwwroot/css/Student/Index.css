@@ -1,0 +1,203 @@
+﻿/* Student Dashboard - Blue Theme (#2563EB) */
+
+.student-dashboard {
+    padding: 2rem;
+    min-height: calc(100vh - 200px);
+    background: linear-gradient(135deg, #EFF6FF 0%, #F3F4F6 100%);
+}
+
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Welcome Section */
+.welcome-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 40px rgba(37, 99, 235, 0.3);
+}
+
+.welcome-content {
+    flex: 1;
+}
+
+.welcome-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 0.5rem 0;
+}
+
+.user-highlight {
+    color: #BFDBFE;
+}
+
+.welcome-subtitle {
+    font-size: 1rem;
+    color: #DBEAFE;
+    margin: 0;
+}
+
+.welcome-icon {
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.2);
+}
+
+/* Navigation Cards Section */
+.nav-cards-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1E293B;
+    margin: 0 0 1.5rem 0;
+}
+
+.nav-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.nav-card {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 2px solid transparent;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.nav-card:hover {
+    border-color: #2563EB;
+    box-shadow: 0 12px 40px rgba(37, 99, 235, 0.2);
+    transform: translateY(-4px);
+}
+
+.nav-card-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    border-radius: 14px;
+    font-size: 1.75rem;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+.nav-card-content {
+    flex: 1;
+}
+
+.nav-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1E293B;
+    margin: 0 0 0.375rem 0;
+}
+
+.nav-card-description {
+    font-size: 0.875rem;
+    color: #64748B;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.nav-card-arrow {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #EFF6FF;
+    border-radius: 50%;
+    color: #2563EB;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.nav-card:hover .nav-card-arrow {
+    background: #2563EB;
+    color: #ffffff;
+    transform: translateX(4px);
+}
+
+/* AI Card Highlight */
+.nav-card-highlight {
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    border: 2px solid #93C5FD;
+}
+
+.nav-card-highlight:hover {
+    border-color: #2563EB;
+    background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+}
+
+.nav-card-highlight .ai-icon {
+    background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+}
+
+.badge-new {
+    display: inline-block;
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 9999px;
+    margin-left: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .student-dashboard {
+        padding: 1rem;
+    }
+
+    .welcome-section {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+        padding: 1.5rem;
+    }
+
+    .welcome-icon {
+        font-size: 3rem;
+    }
+
+    .welcome-title {
+        font-size: 1.5rem;
+    }
+
+    .nav-cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-card {
+        padding: 1.25rem;
+    }
+
+    .nav-card-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 1.5rem;
+    }
+}

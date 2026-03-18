@@ -1,0 +1,68 @@
+@page
+@model Presentation.Areas.Student.Pages.Wallet.DepositModel
+@{
+    ViewData["Title"] = "Deposit via MoMo";
+}
+
+<section class="registration-page">
+    <div class="registration-container">
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-wallet"></i> Deposit via MoMo</h1>
+                <p class="page-subtitle">Top up your wallet balance using MoMo e-wallet</p>
+            </div>
+            @if (Model.WalletBalance.HasValue)
+            {
+                <div class="wallet-badge">
+                    <i class="fas fa-wallet"></i>
+                    <span class="wallet-label">Current Balance</span>
+                    <span class="wallet-amount">@Model.WalletBalance.Value.ToString("N0") ₫</span>
+                </div>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> @Model.SuccessMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        <div class="table-wrapper" style="padding: 2rem;">
+            <form method="post">
+                <div style="margin-bottom: 1.5rem;">
+                    <label class="filter-label" for="amount">
+                        <i class="fas fa-coins"></i> Deposit Amount (₫)
+                    </label>
+                    <input type="number" name="Amount" id="amount" class="filter-select"
+                           min="1000" step="1000" required placeholder="Enter amount..."
+                           value="@(Model.Amount > 0 ? Model.Amount : "")"
+                           style="width: 100%; max-width: 400px; margin-top: 0.5rem;" />
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                    <button type="button" class="btn-register" onclick="document.getElementById('amount').value='50000'" style="font-size: 0.8rem;">50,000 ₫</button>
+                    <button type="button" class="btn-register" onclick="document.getElementById('amount').value='100000'" style="font-size: 0.8rem;">100,000 ₫</button>
+                    <button type="button" class="btn-register" onclick="document.getElementById('amount').value='200000'" style="font-size: 0.8rem;">200,000 ₫</button>
+                    <button type="button" class="btn-register" onclick="document.getElementById('amount').value='500000'" style="font-size: 0.8rem;">500,000 ₫</button>
+                </div>
+
+                <button type="submit" class="btn-register" style="padding: 0.75rem 2rem; font-size: 1rem;">
+                    <i class="fas fa-external-link-alt"></i> Pay with MoMo
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Student/CourseRegistration/Index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}

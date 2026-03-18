@@ -1,0 +1,30 @@
+﻿@using System.Security.Claims
+@{
+    var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - TPF University Admin</title>
+    <link rel="stylesheet" href="~/css/Shared/Layout/_LayoutAdmin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Shared/Navbar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Shared/Footer.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+</head>
+<body data-role="@userRole">
+    <div class="layout-wrapper">
+        @await Html.PartialAsync("Navbar")
+
+        <main class="main-content">
+            @RenderBody()
+        </main>
+
+        @await Html.PartialAsync("Footer")
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

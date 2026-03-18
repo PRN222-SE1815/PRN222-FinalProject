@@ -1,0 +1,222 @@
+@page
+@model Presentation.Areas.Admin.Pages.GradeAppeals.IndexModel
+@{
+    ViewBag.Title = "Quản lý khiếu nại điểm";
+    var totalPages = Model.Result.PageSize > 0
+        ? (int)Math.Ceiling((double)Model.Result.TotalCount / Model.Result.PageSize)
+        : 1;
+    var currentStatus = Model.Status ?? "";
+}
+
+<div class="admin-appeals-page">
+    <div class="admin-appeals-container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-scale-balanced"></i> Quản lý khiếu nại điểm</h1>
+                <p class="page-subtitle">Tổng quan toàn bộ khiếu nại điểm trong hệ thống</p>
+            </div>
+        </div>
+
+        <!-- Alert -->
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        @if (Model.Semesters.Count > 0)
+        {
+            <div class="semester-filter-card">
+                <form method="get" class="semester-filter-form">
+                    <input type="hidden" name="Status" value="@Model.Status" />
+                    <input type="hidden" name="PageSize" value="@Model.PageSize" />
+                    <label class="filter-label"><i class="fas fa-calendar-alt"></i> Học kỳ</label>
+                    <select name="SemesterId" class="filter-select" onchange="this.form.submit()">
+                        @foreach (var sem in Model.Semesters)
+                        {
+                            <option value="@sem.SemesterId" selected="@(Model.SelectedSemesterId == sem.SemesterId)">
+                                @sem.SemesterCode — @sem.SemesterName @(sem.IsActive ? "★" : "")
+                            </option>
+                        }
+                    </select>
+                </form>
+            </div>
+        }
+
+        <!-- Filter Chips -->
+        <div class="filter-bar">
+            <a asp-area="Admin" asp-page="/GradeAppeals/Index"
+               asp-route-SemesterId="@Model.SelectedSemesterId"
+               class="filter-chip @(string.IsNullOrEmpty(currentStatus) ? "active" : "")">
+                <i class="fas fa-list"></i> Tất cả
+            </a>
+            <a asp-area="Admin" asp-page="/GradeAppeals/Index" asp-route-Status="SUBMITTED"
+               asp-route-SemesterId="@Model.SelectedSemesterId"
+               class="filter-chip @(currentStatus == "SUBMITTED" ? "active" : "")">
+                <i class="fas fa-paper-plane"></i> Đã gửi
+            </a>
+            <a asp-area="Admin" asp-page="/GradeAppeals/Index" asp-route-Status="UNDER_REVIEW"
+               asp-route-SemesterId="@Model.SelectedSemesterId"
+               class="filter-chip @(currentStatus == "UNDER_REVIEW" ? "active" : "")">
+                <i class="fas fa-search"></i> Đang xem xét
+            </a>
+            <a asp-area="Admin" asp-page="/GradeAppeals/Index" asp-route-Status="APPROVED"
+               asp-route-SemesterId="@Model.SelectedSemesterId"
+               class="filter-chip @(currentStatus == "APPROVED" ? "active" : "")">
+                <i class="fas fa-check-circle"></i> Đã chấp nhận
+            </a>
+            <a asp-area="Admin" asp-page="/GradeAppeals/Index" asp-route-Status="REJECTED"
+               asp-route-SemesterId="@Model.SelectedSemesterId"
+               class="filter-chip @(currentStatus == "REJECTED" ? "active" : "")">
+                <i class="fas fa-times-circle"></i> Đã từ chối
+            </a>
+        </div>
+
+        <!-- Table -->
+        @if (Model.Result.Items.Any())
+        {
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center">#</th>
+                            <th>Sinh viên</th>
+                            <th class="text-center">GradeBook</th>
+                            <th>Nội dung</th>
+                            <th class="text-center">Trạng thái</th>
+                            <th>Phản hồi GV</th>
+                            <th class="text-center">Ngày gửi</th>
+                            <th class="text-center">Xử lý bởi</th>
+                            <th class="text-center">Ngày xử lý</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Result.Items)
+                        {
+                            <tr>
+                                <td class="text-center"><span class="badge-id">@item.AppealId</span></td>
+                                <td>
+                                    <span class="student-name">
+                                        @(item.StudentFullName ?? item.StudentCode ?? item.StudentId.ToString())
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a class="btn-gradebook"
+                                       asp-area="Admin"
+                                       asp-page="/GradebookManagement/Review"
+                                       asp-route-classSectionId="@item.ClassSectionId"
+                                       asp-route-highlightEnrollmentId="@item.EnrollmentId"
+                                       asp-fragment="enrollment-@item.EnrollmentId">
+                                        @(string.IsNullOrWhiteSpace(item.ClassSectionCode)
+                                            ? $"GradeBook #{item.GradeBookId}"
+                                            : $"{item.CourseCode} - {item.ClassSectionCode}")
+                                    </a>
+                                </td>
+                                <td class="appeal-content-cell" title="@item.AppealContent">
+                                    @(item.AppealContent.Length > 60 ? item.AppealContent[..60] + "…" : item.AppealContent)
+                                </td>
+                                <td class="text-center">
+                                    <span class="status-badge @GetStatusClass(item.Status)">@GetStatusLabel(item.Status)</span>
+                                </td>
+                                <td class="response-message-cell" title="@item.ResponseMessage">
+                                    @if (string.IsNullOrWhiteSpace(item.ResponseMessage))
+                                    {
+                                        <span class="date-empty">—</span>
+                                    }
+                                    else
+                                    {
+                                        @(item.ResponseMessage.Length > 60 ? item.ResponseMessage[..60] + "…" : item.ResponseMessage)
+                                    }
+                                </td>
+                                <td class="text-center date-cell">@item.SubmittedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-center resolver-cell">@(item.ResolvedByFullName ?? "—")</td>
+                                <td class="text-center">
+                                    @if (item.ResolvedAt.HasValue)
+                                    {
+                                        <span class="date-cell">@item.ResolvedAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="date-empty">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (totalPages > 1)
+            {
+                <div class="pagination">
+                    <a class="page-btn @(Model.PageNumber <= 1 ? "disabled" : "")"
+                       asp-area="Admin" asp-page="/GradeAppeals/Index"
+                       asp-route-PageNumber="@(Model.PageNumber - 1)"
+                       asp-route-SemesterId="@Model.SelectedSemesterId"
+                       asp-route-Status="@Model.Status">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <a class="page-btn @(i == Model.PageNumber ? "active" : "")"
+                           asp-area="Admin" asp-page="/GradeAppeals/Index"
+                           asp-route-PageNumber="@i"
+                           asp-route-SemesterId="@Model.SelectedSemesterId"
+                           asp-route-Status="@Model.Status">
+                            @i
+                        </a>
+                    }
+
+                    <a class="page-btn @(Model.PageNumber >= totalPages ? "disabled" : "")"
+                       asp-area="Admin" asp-page="/GradeAppeals/Index"
+                       asp-route-PageNumber="@(Model.PageNumber + 1)"
+                       asp-route-SemesterId="@Model.SelectedSemesterId"
+                       asp-route-Status="@Model.Status">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+
+                    <span class="page-info">@Model.Result.TotalCount khiếu nại</span>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="table-wrapper">
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Không có khiếu nại nào.</p>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+@functions {
+    static string GetStatusClass(string status) => status switch
+    {
+        "SUBMITTED" => "status-submitted",
+        "UNDER_REVIEW" => "status-under_review",
+        "APPROVED" => "status-approved",
+        "REJECTED" => "status-rejected",
+        _ => ""
+    };
+
+    static string GetStatusLabel(string status) => status switch
+    {
+        "SUBMITTED" => "Đã gửi",
+        "UNDER_REVIEW" => "Đang xem xét",
+        "APPROVED" => "Đã chấp nhận",
+        "REJECTED" => "Đã từ chối",
+        _ => status
+    };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Admin/GradeAppeals/Index.css" asp-append-version="true" />
+}

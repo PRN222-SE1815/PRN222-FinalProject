@@ -1,0 +1,117 @@
+@page
+@model Presentation.Areas.Admin.Pages.EnrollmentApprovals.IndexModel
+@{
+    ViewData["Title"] = "Enrollment Approvals";
+}
+
+<section class="approvals-page">
+    <div class="approvals-container">
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-clipboard-check"></i> Enrollment Approvals</h1>
+                <p class="page-subtitle">Review and approve or reject pending enrollment requests</p>
+            </div>
+            <div class="header-stats">
+                <span class="stat-badge">
+                    <i class="fas fa-clock"></i>
+                    @Model.PendingEnrollments.Count pending
+                </span>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> @Model.SuccessMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        @if (Model.PendingEnrollments.Count == 0)
+        {
+            <div class="empty-state">
+                <i class="fas fa-check-double"></i>
+                <p>Không có đăng ký nào đang chờ phê duyệt.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Section</th>
+                            <th class="text-center">Credits</th>
+                            <th class="text-right">Fee</th>
+                            <th>Registered At</th>
+                            <th>Reason (for reject)</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var e in Model.PendingEnrollments)
+                        {
+                            <tr>
+                                <td>@e.EnrollmentId</td>
+                                <td>
+                                    <div class="student-info">
+                                        <span class="student-name">@e.StudentFullName</span>
+                                        <span class="student-code">@e.StudentCode</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge badge-code">@e.CourseCode</span></td>
+                                <td><span class="badge badge-section">@e.SectionCode</span></td>
+                                <td class="text-center">@e.Credits</td>
+                                <td class="text-right">@e.FeeAmount.ToString("N0") ₫</td>
+                                <td>@e.EnrolledAt.AddHours(7).ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>
+                                    <input type="text" class="reason-input" id="reason-@e.EnrollmentId" placeholder="Optional reason..." />
+                                </td>
+                                <td class="text-center">
+                                    <div class="action-buttons">
+                                        <form method="post" asp-page-handler="Approve" style="display:inline;">
+                                            <input type="hidden" name="enrollmentId" value="@e.EnrollmentId" />
+                                            <button type="submit" class="btn-approve" title="Approve">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                        </form>
+                                        <form method="post" asp-page-handler="Reject" style="display:inline;" onsubmit="setReason(this, @e.EnrollmentId)">
+                                            <input type="hidden" name="enrollmentId" value="@e.EnrollmentId" />
+                                            <input type="hidden" name="reason" value="" />
+                                            <button type="submit" class="btn-reject" title="Reject">
+                                                <i class="fas fa-times"></i> Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Admin/EnrollmentApprovals/Index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}
+
+@section Scripts {
+    <script>
+        function setReason(form, enrollmentId) {
+            var reasonInput = document.getElementById('reason-' + enrollmentId);
+            form.querySelector('input[name="reason"]').value = reasonInput ? reasonInput.value : '';
+        }
+    </script>
+}

@@ -1,0 +1,154 @@
+@page
+@model Presentation.Areas.Student.Pages.StudentGrade.IndexModel
+@{
+    ViewData["Title"] = "My Grades";
+}
+
+<section class="student-grade-page">
+    <div class="grade-container">
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-graduation-cap"></i> My Grades</h1>
+                <p class="page-subtitle">View your grades for enrolled courses.</p>
+            </div>
+        </div>
+
+        <!-- Semester Filter -->
+        @if (Model.Semesters.Count > 0)
+        {
+            <div class="filter-bar">
+                <form method="get" class="semester-filter-form">
+                    <label class="filter-label"><i class="fas fa-calendar-alt"></i> Semester</label>
+                    <select name="SemesterId" class="filter-select" onchange="this.form.submit()">
+                        @foreach (var sem in Model.Semesters)
+                        {
+                            <option value="@sem.SemesterId"
+                                    selected="@(Model.SelectedSemesterId == sem.SemesterId)">
+                                @sem.SemesterCode — @sem.SemesterName @(sem.IsActive ? "★" : "")
+                            </option>
+                        }
+                    </select>
+                </form>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        @if (Model.GradeViewModels.Count == 0)
+        {
+            <div class="empty-state">
+                <i class="fas fa-folder-open"></i>
+                <p>No enrolled courses found.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var vm in Model.GradeViewModels)
+            {
+                var canCreateAppeal = vm.GradeBookId.HasValue && string.Equals(vm.GradebookStatus, "PUBLISHED", StringComparison.OrdinalIgnoreCase);
+                var isAppealDisabled = canCreateAppeal && vm.HasAnyAppeal;
+                <div class="course-card @(vm.HasActiveAppeal ? "course-card-appealed" : "")">
+                    <div class="course-header">
+                        <div class="course-info">
+                            <span class="course-code">@vm.CourseCode</span>
+                            <span class="course-name">@vm.CourseName</span>
+                            <span class="section-code">@vm.SectionCode</span>
+                            @if (vm.HasActiveAppeal)
+                            {
+                                <span class="appeal-flag"><i class="fas fa-scale-balanced"></i> Đang khiếu nại</span>
+                            }
+                        </div>
+                        <div class="course-badges">
+                            @if (vm.HasGrades && vm.GradebookStatus is not null)
+                            {
+                                <span class="status-badge status-@vm.GradebookStatus.ToLower().Replace("_", "-")">@vm.GradebookStatus</span>
+                            }
+                            else
+                            {
+                                <span class="status-badge status-pending">Not Published</span>
+                            }
+
+                            @if (canCreateAppeal && !isAppealDisabled)
+                            {
+                                <a asp-area="Student"
+                                   asp-page="/GradeAppeals/Create"
+                                   asp-route-enrollmentId="@vm.EnrollmentId"
+                                   asp-route-gradeBookId="@vm.GradeBookId"
+                                   asp-route-semesterId="@Model.SelectedSemesterId"
+                                   class="appeal-btn">
+                                    <i class="fas fa-scale-balanced"></i> Khiếu nại
+                                </a>
+                            }
+                            else if (isAppealDisabled)
+                            {
+                                <span class="appeal-btn appeal-btn-disabled"
+                                      title="Bạn chỉ được gửi một khiếu nại duy nhất cho gradebook này.">
+                                    <i class="fas fa-lock"></i> Khiếu nại
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    @if (vm.HasGrades && vm.GradeItems.Count > 0)
+                    {
+                        <div class="grade-table-wrapper">
+                            <table class="grade-table">
+                                <thead>
+                                    <tr>
+                                        @foreach (var item in vm.GradeItems)
+                                        {
+                                            <th>
+                                                <span class="item-name">@item.ItemName</span>
+                                                @if (item.Weight.HasValue)
+                                                {
+                                                    <span class="item-meta">@(item.Weight.Value * 100)%</span>
+                                                }
+                                            </th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        @foreach (var item in vm.GradeItems)
+                                        {
+                                            var entry = vm.GradeEntries.FirstOrDefault(e =>
+                                                e.GradeItemId == item.GradeItemId
+                                                && e.EnrollmentId == vm.EnrollmentId);
+                                            <td class="score-cell">
+                                                @if (entry?.Score is not null)
+                                                {
+                                                    <span class="score-value">@entry.Score.Value.ToString("0.##")</span>
+                                                    <span class="score-max">/ @item.MaxScore</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="score-empty">—</span>
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="no-grades">
+                            <i class="fas fa-clock"></i> Grades not yet available.
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Student/StudentGrade/Index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}

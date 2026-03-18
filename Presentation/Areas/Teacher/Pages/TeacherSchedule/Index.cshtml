@@ -1,0 +1,142 @@
+@page
+@model Presentation.Areas.Teacher.Pages.TeacherSchedule.IndexModel
+@{
+    ViewData["Title"] = "My Teaching Schedule";
+}
+
+<section class="schedule-page">
+    <div class="schedule-container">
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-calendar-alt"></i> Teaching Schedule</h1>
+                <p class="page-subtitle">View your teaching calendar</p>
+            </div>
+        </div>
+
+        <div class="calendar-card">
+            <div id="teacherScheduleCalendar"></div>
+        </div>
+    </div>
+</section>
+
+<div class="modal-overlay" id="eventModal" style="display:none;">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle"></h3>
+            <button type="button" class="modal-close" onclick="closeEventModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-row"><span class="detail-label"><i class="fas fa-book"></i> Course</span><span class="detail-value" id="modalCourse"></span></div>
+            <div class="detail-row"><span class="detail-label"><i class="fas fa-layer-group"></i> Section</span><span class="detail-value" id="modalSection"></span></div>
+            <div class="detail-row"><span class="detail-label"><i class="fas fa-chalkboard-teacher"></i> Teacher</span><span class="detail-value" id="modalTeacher"></span></div>
+            <div class="detail-row"><span class="detail-label"><i class="fas fa-clock"></i> Time</span><span class="detail-value" id="modalTime"></span></div>
+            <div class="detail-row"><span class="detail-label"><i class="fas fa-map-marker-alt"></i> Location</span><span class="detail-value" id="modalLocation"></span></div>
+            <div class="detail-row" id="modalOnlineRow" style="display:none;">
+                <span class="detail-label"><i class="fas fa-video"></i> Online</span>
+                <span class="detail-value"><a id="modalOnlineUrl" href="#" target="_blank" rel="noopener">Join Link</a></span>
+            </div>
+            <div class="detail-row"><span class="detail-label"><i class="fas fa-info-circle"></i> Status</span><span class="detail-value" id="modalStatus"></span></div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/Student/StudentSchedule/Index.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('teacherScheduleCalendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                locale: 'vi',
+                nowIndicator: true,
+                slotMinTime: '06:00:00',
+                slotMaxTime: '22:00:00',
+                height: 'auto',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                buttonText: { today: 'Today', month: 'Month', week: 'Week', day: 'Day' },
+                events: function (info, successCallback, failureCallback) {
+                    var viewType = info.view && info.view.type ? info.view.type : 'timeGridWeek';
+                    var viewMode = 'WEEK';
+                    if (viewType === 'dayGridMonth') viewMode = 'MONTH';
+                    else if (viewType === 'timeGridDay') viewMode = 'TODAY';
+
+                    var url = '/Teacher/TeacherSchedule/Index?handler=Events'
+                        + '&from=' + encodeURIComponent(info.startStr)
+                        + '&to=' + encodeURIComponent(info.endStr)
+                        + '&viewMode=' + viewMode;
+
+                    fetch(url, { headers: { 'RequestVerificationToken': getAntiForgeryToken() } })
+                        .then(function (resp) {
+                            if (!resp.ok) {
+                                return resp.json().then(function (err) {
+                                    throw new Error(err.message || 'Failed to load schedule');
+                                });
+                            }
+                            return resp.json();
+                        })
+                        .then(function (data) { successCallback(data); })
+                        .catch(function (err) {
+                            showToast(err.message || 'Could not load schedule events.', 'error');
+                            failureCallback(err);
+                        });
+                },
+                eventClick: function (info) {
+                    var props = info.event.extendedProps;
+                    document.getElementById('modalTitle').textContent = info.event.title;
+                    document.getElementById('modalCourse').textContent = (props.courseCode || '') + ' — ' + (props.courseName || '');
+                    document.getElementById('modalSection').textContent = props.sectionCode || '';
+                    document.getElementById('modalTeacher').textContent = props.teacherName || 'N/A';
+                    document.getElementById('modalTime').textContent = (info.event.start ? info.event.start.toLocaleString('vi-VN') : '') + ' — ' + (info.event.end ? info.event.end.toLocaleString('vi-VN') : '');
+                    document.getElementById('modalLocation').textContent = props.location || 'N/A';
+                    document.getElementById('modalStatus').textContent = props.status || '';
+                    var onlineRow = document.getElementById('modalOnlineRow');
+                    if (props.onlineUrl) {
+                        onlineRow.style.display = '';
+                        document.getElementById('modalOnlineUrl').href = props.onlineUrl;
+                    } else {
+                        onlineRow.style.display = 'none';
+                    }
+                    document.getElementById('eventModal').style.display = 'flex';
+                }
+            });
+
+            calendar.render();
+            document.getElementById('eventModal').addEventListener('click', function (e) {
+                if (e.target === this) closeEventModal();
+            });
+        });
+
+        function closeEventModal() {
+            document.getElementById('eventModal').style.display = 'none';
+        }
+
+        function getAntiForgeryToken() {
+            var tokenEl = document.querySelector('input[name="__RequestVerificationToken"]');
+            return tokenEl ? tokenEl.value : '';
+        }
+
+        function showToast(message, type) {
+            var toast = document.createElement('div');
+            toast.className = 'toast-notification toast-' + (type || 'info');
+            toast.innerHTML = '<i class="fas fa-' + (type === 'error' ? 'exclamation-circle' : 'info-circle') + '"></i> ' + message;
+            document.body.appendChild(toast);
+            setTimeout(function () { toast.classList.add('toast-show'); }, 50);
+            setTimeout(function () {
+                toast.classList.remove('toast-show');
+                setTimeout(function () { toast.remove(); }, 300);
+            }, 4000);
+        }
+    </script>
+}

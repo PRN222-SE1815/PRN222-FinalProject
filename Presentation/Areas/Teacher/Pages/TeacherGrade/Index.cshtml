@@ -1,0 +1,176 @@
+@page
+@model Presentation.Areas.Teacher.Pages.TeacherGrade.IndexModel
+@{
+    ViewData["Title"] = "Gradebook";
+    var gradebook = Model.Gradebook;
+    var canEdit = Model.CanEdit;
+}
+
+<section class="gradebook-page">
+    <div class="gradebook-container">
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-pen-to-square"></i> Gradebook</h1>
+                <p class="page-subtitle">Enter and manage grades for your class section.</p>
+            </div>
+            <a asp-area="Teacher" asp-page="/MyClasses/Index" class="btn btn-back">
+                <i class="fas fa-arrow-left"></i> Back to My Classes
+            </a>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> @Model.SuccessMessage
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        @if (gradebook is not null)
+        {
+            <!-- Status Badge -->
+            <div class="gradebook-info">
+                <span class="info-label">Class:</span>
+                <span class="info-value">@gradebook.SectionCode</span>
+                <span class="info-label">Course:</span>
+                <span class="info-value">@gradebook.CourseCode — @gradebook.CourseName</span>
+                <span class="info-label">Semester:</span>
+                <span class="info-value">@gradebook.SemesterName</span>
+                <span class="info-label">Status:</span>
+                <span class="status-badge status-@gradebook.Status.ToLower().Replace("_", "-")">@gradebook.Status</span>
+                <span class="info-label">Version:</span>
+                <span class="info-value">@gradebook.Version</span>
+            </div>
+
+            @if (Model.AppealId.HasValue && Model.HighlightEnrollmentId.HasValue)
+            {
+                <div class="appeal-focus-bar">
+                    <div class="appeal-focus-title">
+                        <i class="fas fa-scale-balanced"></i>
+                        Đang xem ngữ cảnh khiếu nại cho Enrollment #@Model.HighlightEnrollmentId
+                    </div>
+                    <form method="get" asp-area="Teacher" asp-page="/GradeAppeals/Review" asp-route-id="@Model.AppealId" class="appeal-score-form">
+                        <label class="quick-score-label">Điểm mới</label>
+                        <input type="number" name="PrefillNewScore" value="@(Model.PrefillNewScore?.ToString("0.##"))"
+                               class="quick-score-input" step="0.01" min="0" max="10" placeholder="Nhập điểm" />
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-share"></i> Áp dụng vào xử lý khiếu nại
+                        </button>
+                    </form>
+                </div>
+            }
+
+            @if (gradebook.GradeItems.Count == 0)
+            {
+                <div class="empty-state">
+                    <i class="fas fa-clipboard"></i>
+                    <p>No grade items configured for this gradebook. Admin must create grade items first.</p>
+                </div>
+            }
+            else if (Model.EnrollmentRows.Count == 0)
+            {
+                <div class="empty-state">
+                    <i class="fas fa-user-slash"></i>
+                    <p>No enrollments found for grading.</p>
+                </div>
+            }
+            else
+            {
+                <!-- Grade Table -->
+                <form method="post" asp-page-handler="Save">
+                    <input type="hidden" name="SaveRequest.ClassSectionId" value="@gradebook.ClassSectionId" />
+
+                    <div class="table-wrapper">
+                        <table class="grade-table">
+                            <thead>
+                                <tr>
+                                    <th class="sticky-col">Student</th>
+                                    @foreach (var item in gradebook.GradeItems)
+                                    {
+                                        <th>
+                                            <div class="item-header">
+                                                <span class="item-name">@item.ItemName</span>
+                                                <span class="item-meta">Max: @item.MaxScore</span>
+                                                @if (item.Weight.HasValue)
+                                                {
+                                                    <span class="item-meta">W: @(item.Weight.Value * 100)%</span>
+                                                }
+                                            </div>
+                                        </th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ var scoreIdx = 0; }
+                                @foreach (var row in Model.EnrollmentRows)
+                                {
+                                    <tr id="enrollment-@row.EnrollmentId" class="@(Model.HighlightEnrollmentId == row.EnrollmentId ? "row-focus" : "")">
+                                        <td class="sticky-col">
+                                            <div class="student-info">
+                                                <span class="student-name">@row.StudentName</span>
+                                                <span class="student-code">@row.StudentCode</span>
+                                            </div>
+                                        </td>
+                                        @foreach (var item in gradebook.GradeItems)
+                                        {
+                                            row.Scores.TryGetValue(item.GradeItemId, out var cellScore);
+                                            <td class="score-cell @(Model.HighlightEnrollmentId == row.EnrollmentId && Model.HighlightGradeItemId == item.GradeItemId ? "score-cell-focus" : "")">
+                                                <input type="hidden" name="SaveRequest.Scores[@scoreIdx].GradeItemId" value="@item.GradeItemId" />
+                                                <input type="hidden" name="SaveRequest.Scores[@scoreIdx].EnrollmentId" value="@row.EnrollmentId" />
+                                                <input type="number"
+                                                       name="SaveRequest.Scores[@scoreIdx].Score"
+                                                       value="@(cellScore?.ToString("0.##"))"
+                                                       step="0.01" min="0" max="10"
+                                                       class="score-input"
+                                                       @(canEdit ? "" : "disabled") />
+                                            </td>
+                                            scoreIdx++; 
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="action-bar">
+                        <button type="submit" class="btn btn-primary" @(canEdit ? "" : "disabled")>
+                            <i class="fas fa-save"></i> Save Scores
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Submit for Review -->
+                <form method="post" asp-page-handler="SubmitReview" class="review-form">
+                    <input type="hidden" name="ApprovalRequest.ClassSectionId" value="@gradebook.ClassSectionId" />
+                    <div class="review-section">
+                        <label for="approvalMessage">Message (optional):</label>
+                        <input type="text" id="approvalMessage" name="ApprovalRequest.RequestMessage" class="input-field" placeholder="Optional message to admin..." />
+                        <button type="submit" class="btn btn-accent" @(canEdit ? "" : "disabled")>
+                            <i class="fas fa-paper-plane"></i> Submit for Review
+                        </button>
+                    </div>
+                </form>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-folder-open"></i>
+                <p>No gradebook found for this class section.</p>
+                <a asp-area="Teacher" asp-page="/MyClasses/Index" class="btn btn-primary" style="margin-top:1rem;display:inline-flex;">
+                    <i class="fas fa-arrow-left"></i> Back to My Classes
+                </a>
+            </div>
+        }
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Teacher/TeacherGrade/Index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}

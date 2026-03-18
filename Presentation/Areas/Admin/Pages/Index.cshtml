@@ -1,0 +1,114 @@
+﻿@page
+@using System.Security.Claims
+@model Presentation.Areas.Admin.Pages.IndexModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    var userName = User.Identity?.Name ?? "Administrator";
+}
+
+<section class="admin-dashboard">
+    <div class="dashboard-container">
+        <div class="welcome-section">
+            <div class="welcome-content">
+                <h1 class="welcome-title">Welcome back, <span class="user-highlight">@userName</span>!</h1>
+                <p class="welcome-subtitle">Manage users, courses, and oversee the entire system.</p>
+            </div>
+            <div class="welcome-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+        </div>
+
+        <div class="nav-cards-section">
+            <h2 class="section-title">System Management</h2>
+            <div class="nav-cards-grid">
+                <a asp-page="/Admin/Users/Index" class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="fas fa-user-cog"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">User Management</h3>
+                        <p class="nav-card-description">Create, edit, and manage student, teacher, and admin accounts.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <a asp-area="Admin" asp-page="/EnrollmentApprovals/Index" class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">Enrollment Approvals</h3>
+                        <p class="nav-card-description">Review and approve or reject pending enrollment requests.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <a asp-area="Admin" asp-page="/GradebookManagement/Index" class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="fas fa-pen-to-square"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">Gradebook Management</h3>
+                        <p class="nav-card-description">Review, approve, or reject teacher gradebook submissions.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <a asp-area="Admin" asp-page="/CourseManagement/Index" class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">Course Management</h3>
+                        <p class="nav-card-description">Manage courses, programs, semesters, and class sections.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="nav-cards-section">
+            <h2 class="section-title">Additional Tools</h2>
+            <div class="nav-cards-grid">
+                <a href="#" class="nav-card admin-tool-card">
+                    <div class="nav-card-icon secondary">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">Reports & Analytics</h3>
+                        <p class="nav-card-description">View enrollment statistics, grade reports, and system analytics.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <a href="#" class="nav-card admin-tool-card">
+                    <div class="nav-card-icon secondary">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">System Settings</h3>
+                        <p class="nav-card-description">Configure system parameters, semester settings, and policies.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Admin/Index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}

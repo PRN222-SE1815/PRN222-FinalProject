@@ -1,0 +1,174 @@
+@page
+@model Presentation.Areas.Student.Pages.CourseRegistration.IndexModel
+@{
+    ViewData["Title"] = "Course Registration";
+    var regEnd = Model.Summary.RegistrationEndDate?.ToString("yyyy-MM-dd") ?? "N/A";
+    var addDrop = Model.Summary.AddDropDeadline?.ToString("yyyy-MM-dd") ?? "N/A";
+}
+
+<section class="registration-page">
+    <div class="registration-container">
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title"><i class="fas fa-plus-circle"></i> Course Registration</h1>
+                <p class="page-subtitle">Browse available class sections and register for courses</p>
+            </div>
+            @if (Model.Summary.WalletBalance.HasValue)
+            {
+                <div class="wallet-badge">
+                    <i class="fas fa-wallet"></i>
+                    <span class="wallet-label">Wallet Balance</span>
+                    <span class="wallet-amount">@Model.Summary.WalletBalance.Value.ToString("N0") ₫</span>
+                </div>
+            }
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label class="filter-label" for="semesterSelect">
+                    <i class="fas fa-calendar-alt"></i> Semester
+                </label>
+                <form method="get" id="semesterForm">
+                    <select name="semesterId" id="semesterSelect" class="filter-select" onchange="document.getElementById('semesterForm').submit();">
+                        @foreach (var sem in Model.Summary.Semesters)
+                        {
+                            <option value="@sem.SemesterId"
+                                    selected="@(sem.SemesterId == Model.Summary.SelectedSemesterId)">
+                                @sem.SemesterCode — @sem.SemesterName @(sem.IsActive ? "(Active)" : "")
+                            </option>
+                        }
+                    </select>
+                </form>
+            </div>
+            <div class="deadline-info">
+                <span class="deadline-item">
+                    <i class="fas fa-hourglass-end"></i> Registration deadline: <strong>@regEnd</strong>
+                </span>
+                <span class="deadline-item">
+                    <i class="fas fa-exchange-alt"></i> Add/Drop deadline: <strong>@addDrop</strong>
+                </span>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> @Model.SuccessMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+
+            @if (Model.MissingPrerequisites.Count > 0)
+            {
+                <div class="alert alert-error" style="margin-top: -0.75rem;">
+                    <div>
+                        <strong><i class="fas fa-list-ul"></i> Các môn tiên quyết còn thiếu:</strong>
+                        <ul style="margin: 0.5rem 0 0 1.25rem; padding: 0;">
+                            @foreach (var prereq in Model.MissingPrerequisites)
+                            {
+                                <li>
+                                    <span class="badge badge-code" style="font-size: 0.8rem;">@prereq.CourseCode</span>
+                                    — @prereq.CourseName
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+        }
+
+        @if (Model.Summary.ClassSections.Count == 0)
+        {
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Không có lớp học phần nào đang mở đăng ký cho học kỳ này.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Course Code</th>
+                            <th>Course Name</th>
+                            <th>Section</th>
+                            <th>Teacher</th>
+                            <th class="text-center">Credits</th>
+                            <th class="text-center">Capacity</th>
+                            <th class="text-right">Est. Fee</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var cs in Model.Summary.ClassSections)
+                        {
+                            var isFull = cs.CurrentEnrollment >= cs.MaxCapacity;
+                            <tr class="@(!cs.CanRegister ? "row-disabled" : "")">
+                                <td>
+                                    <span class="badge badge-code">@cs.CourseCode</span>
+                                    @if (Model.Summary.IsPastSemester)
+                                    {
+                                        <span class="badge badge-past">Past Semester</span>
+                                    }
+                                    else if (Model.Summary.IsRegistrationClosed)
+                                    {
+                                        <span class="badge badge-past">Registration Closed</span>
+                                    }
+                                </td>
+                                <td>@cs.CourseName</td>
+                                <td><span class="badge badge-section">@cs.SectionCode</span></td>
+                                <td>@cs.TeacherFullName</td>
+                                <td class="text-center">@cs.Credits</td>
+                                <td class="text-center">
+                                    <span class="capacity @(isFull ? "capacity-full" : "capacity-available")">
+                                        @cs.CurrentEnrollment / @cs.MaxCapacity
+                                    </span>
+                                </td>
+                                <td class="text-right">@cs.EstimatedFee.ToString("N0") ₫</td>
+                                <td class="text-center">
+                                    @if (cs.CanRegister)
+                                    {
+                                        <form method="post" asp-page-handler="Register">
+                                            <input type="hidden" name="classSectionId" value="@cs.ClassSectionId" />
+                                            <input type="hidden" name="semesterId" value="@Model.Summary.SelectedSemesterId" />
+                                            <button type="submit" class="btn-register">
+                                                <i class="fas fa-cart-plus"></i> Register
+                                            </button>
+                                        </form>
+                                    }
+                                    else if (isFull)
+                                    {
+                                        <span class="badge badge-full">Full</span>
+                                    }
+                                    else if (Model.Summary.IsPastSemester)
+                                    {
+                                        <button class="btn-register btn-register-disabled" disabled title="Semester đã kết thúc">
+                                            <i class="fas fa-ban"></i> Unavailable
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn-register btn-register-disabled" disabled title="Đã hết hạn đăng ký">
+                                            <i class="fas fa-lock"></i> Closed
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Student/CourseRegistration/Index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}

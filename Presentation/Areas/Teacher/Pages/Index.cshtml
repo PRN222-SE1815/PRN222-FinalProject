@@ -1,0 +1,78 @@
+﻿@page
+@model Presentation.Areas.Teacher.Pages.IndexModel
+@using System.Security.Claims
+@{
+    ViewBag.Title = "Teacher Dashboard";
+    var userName = User.Identity?.Name ?? "Teacher";
+    var teacherId = User.FindFirst("TeacherId")?.Value ?? "";
+}
+
+<section class="teacher-dashboard">
+    <div class="dashboard-container">
+        <!-- Welcome Header -->
+        <div class="welcome-section">
+            <div class="welcome-content">
+                <h1 class="welcome-title">Welcome back, <span class="user-highlight">@userName</span>!</h1>
+                <p class="welcome-subtitle">Manage your classes, grades, and connect with your students.</p>
+            </div>
+            <div class="welcome-icon">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+        </div>
+
+        <!-- Navigation Cards -->
+        <div class="nav-cards-section">
+            <h2 class="section-title">Quick Actions</h2>
+            <div class="nav-cards-grid">
+                <!-- Grade Management -->
+                <a asp-area="Teacher" asp-page="/TeacherGrade/Index" class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">Grade Management</h3>
+                        <p class="nav-card-description">Enter, update, and publish grades for your students.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- View Schedule -->
+                <a asp-area="Teacher" asp-page="/TeacherSchedule/Index" class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">View Teaching Schedule</h3>
+                        <p class="nav-card-description">Check your teaching schedule, room assignments, and class timings.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- Chat Room -->
+                <a asp-page="/Chat/Index" class="nav-card">
+                    <div class="nav-card-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">Chat Room</h3>
+                        <p class="nav-card-description">Connect with your students and fellow teachers in course chat rooms.</p>
+                    </div>
+                    <div class="nav-card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Teacher/Index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}
+

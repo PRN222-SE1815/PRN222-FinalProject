@@ -1,0 +1,217 @@
+﻿/* Reset and Base Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #F3F4F6; /* General Background */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1E293B; /* Slate-800 */
+}
+
+/* Layout */
+.login-wrapper {
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.login-card {
+    background: white;
+    width: 100%;
+    max-width: 440px;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Header Section */
+.login-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.logo-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: inline-block;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+.university-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1E293B; /* Slate-800 */
+    margin-bottom: 8px;
+    letter-spacing: -0.025em;
+}
+
+.system-name {
+    font-size: 14px;
+    color: #64748B; /* Slate-500 */
+    font-weight: 500;
+}
+
+/* Form Styles */
+.login-form {
+    margin-bottom: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155; /* Slate-700 */
+}
+
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 12px;
+    font-size: 16px;
+    color: #94A3B8; /* Slate-400 */
+    z-index: 10;
+}
+
+.form-input-login {
+    width: 100%;
+    padding: 12px 12px 12px 40px; /* Space for icon */
+    border: 1px solid #E2E8F0; /* Slate-200 */
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.2s ease;
+    color: #1E293B;
+}
+
+.form-input-login:focus {
+    outline: none;
+    border-color: #2563EB; /* Student Blue-600 used as primary focus color */
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-input-login::placeholder {
+    color: #CBD5E1; /* Slate-300 */
+}
+
+/* Validation */
+.validation-summary {
+    color: #EF4444; /* Red-500 */
+    font-size: 14px;
+    margin-bottom: 16px;
+    padding: 10px;
+    background-color: #FEF2F2;
+    border-radius: 6px;
+    border-left: 3px solid #EF4444;
+    display: none; /* Hidden by default, shown by ASP.NET if errors exist */
+}
+
+.validation-summary.validation-summary-errors {
+    display: block;
+}
+
+.validation-message {
+    display: block;
+    color: #EF4444;
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+/* Button */
+.btn-login {
+    width: 100%;
+    background: #1E293B; /* Admin Slate-800 as neutral primary */
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-login:hover {
+    background: #334155; /* Slate-700 */
+}
+
+.btn-login:active {
+    transform: scale(0.98);
+}
+
+.btn-icon {
+    font-size: 14px;
+    transition: transform 0.2s;
+}
+
+.btn-login:hover .btn-icon {
+    transform: translateX(4px);
+}
+
+/* Footer */
+.login-footer {
+    text-align: center;
+    border-top: 1px solid #F1F5F9;
+    padding-top: 20px;
+}
+
+.login-footer p {
+    font-size: 13px;
+    color: #94A3B8;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 32px 24px;
+        border-radius: 20px;
+        max-width: 100%;
+    }
+    
+    .login-header {
+        margin-bottom: 28px;
+    }
+
+    .logo-icon {
+        width: 70px;
+        height: 70px;
+    }
+
+    .logo-icon i {
+        font-size: 36px;
+    }
+    
+    .university-name {
+        font-size: 24px;
+    }
+
+    .system-name {
+        font-size: 14px;
+    }
+}
