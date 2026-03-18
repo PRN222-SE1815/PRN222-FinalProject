@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using DataAccess.Entities;
+using BusinessObject.Enum;
+using BusinessObject.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess;
@@ -272,7 +273,7 @@ public partial class SchoolManagementDbContext : DbContext
 
         modelBuilder.Entity<GradeAppeal>(entity =>
         {
-            entity.Property(e => e.Status).HasDefaultValue("SUBMITTED");
+            entity.Property(e => e.Status).HasDefaultValue(GradeAppealStatus.Submitted);
             entity.Property(e => e.SubmittedAt).HasDefaultValueSql("(sysutcdatetime())");
 
             entity.HasOne(d => d.Enrollment).WithMany(p => p.GradeAppeals)
