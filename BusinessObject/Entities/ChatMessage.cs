@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("RoomId", "CreatedAt", Name = "IX_ChatMessages_Room_CreatedAt", IsDescending = new[] { false, true })]
 public partial class ChatMessage

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("Username", Name = "UQ_Users_Username", IsUnique = true)]
 public partial class User

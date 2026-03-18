@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("GradeBookId", "RequestAt", Name = "IX_GradeBookApprovals_GradeBookId_RequestAt", IsDescending = new[] { false, true })]
 [Index("Outcome", Name = "IX_GradeBookApprovals_Outcome")]

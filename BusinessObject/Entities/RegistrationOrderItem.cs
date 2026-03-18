@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("OrderId", Name = "IX_RegistrationOrderItems_OrderId")]
 [Index("OrderId", "ClassSectionId", Name = "UQ_RegistrationOrderItems_Order_ClassSection", IsUnique = true)]

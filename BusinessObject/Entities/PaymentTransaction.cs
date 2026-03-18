@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("MoMoOrderId", Name = "UX_PaymentTransactions_MoMoOrderId", IsUnique = true)]
 public partial class PaymentTransaction

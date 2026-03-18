@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("StudentId", "CreatedAt", Name = "IX_RegistrationOrders_Student_CreatedAt", IsDescending = new[] { false, true })]
 [Index("OrderCode", Name = "UQ_RegistrationOrders_OrderCode", IsUnique = true)]

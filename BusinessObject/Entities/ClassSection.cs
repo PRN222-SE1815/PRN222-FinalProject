@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("SemesterId", "CourseId", "SectionCode", Name = "UQ_ClassSections_Sem_Course_Section", IsUnique = true)]
 public partial class ClassSection

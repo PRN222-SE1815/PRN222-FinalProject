@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("GradeBookId", "StudentId", Name = "UQ_GradeAppeals_GradeBook_Student", IsUnique = true)]
 public partial class GradeAppeal

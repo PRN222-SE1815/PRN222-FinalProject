@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("Status", "ClassSectionId", Name = "IX_GradeBooks_Status_ClassSection")]
 [Index("ClassSectionId", Name = "UQ_GradeBooks_ClassSection", IsUnique = true)]

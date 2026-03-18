@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("CartId", "ClassSectionId", Name = "UQ_RegistrationCartItems_Cart_ClassSection", IsUnique = true)]
 public partial class RegistrationCartItem

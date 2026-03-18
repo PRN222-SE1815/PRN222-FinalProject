@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("GradeItemId", "EnrollmentId", Name = "UQ_GradeEntries_Item_Enrollment", IsUnique = true)]
 public partial class GradeEntry

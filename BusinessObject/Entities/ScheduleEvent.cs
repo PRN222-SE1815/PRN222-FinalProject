@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("ClassSectionId", "StartAt", Name = "IX_ScheduleEvents_ClassSection_StartAt")]
 public partial class ScheduleEvent

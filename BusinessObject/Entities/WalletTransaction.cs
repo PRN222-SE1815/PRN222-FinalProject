@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Entities;
+namespace BusinessObject.Entities;
 
 [Index("WalletId", "CreatedAt", Name = "IX_WalletTransactions_Wallet_CreatedAt", IsDescending = new[] { false, true })]
 public partial class WalletTransaction
