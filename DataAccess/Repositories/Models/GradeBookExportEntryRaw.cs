@@ -1,0 +1,10 @@
+namespace DataAccess.Repositories.Models;
+
+public sealed class GradeBookExportEntryRaw
+{
+    public int EnrollmentId { get; set; }
+
+    public int GradeItemId { get; set; }
+
+    public decimal? Score { get; set; }
+}
