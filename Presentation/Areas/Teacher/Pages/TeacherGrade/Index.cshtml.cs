@@ -13,11 +13,13 @@ namespace Presentation.Areas.Teacher.Pages.TeacherGrade;
 public class IndexModel : PageModel
 {
     private readonly IGradebookService _gradebookService;
+    private readonly IGradeBookExportService _gradeBookExportService;
     private readonly ILogger<IndexModel> _logger;
 
-    public IndexModel(IGradebookService gradebookService, ILogger<IndexModel> logger)
+    public IndexModel(IGradebookService gradebookService, IGradeBookExportService gradeBookExportService, ILogger<IndexModel> logger)
     {
         _gradebookService = gradebookService;
+        _gradeBookExportService = gradeBookExportService;
         _logger = logger;
     }
 
@@ -114,6 +116,29 @@ public class IndexModel : PageModel
 
         ClassSectionId = ApprovalRequest.ClassSectionId;
         return RedirectToPage(new { ClassSectionId });
+    }
+
+    public async Task<IActionResult> OnPostExportAsync(int classSectionId, string format, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        if (userId == 0) return RedirectToPage("/Account/Login");
+
+        var result = await _gradeBookExportService.ExportClassSectionAsync(
+            userId,
+            new ExportGradeBookRequest
+            {
+                ClassSectionId = classSectionId,
+                Format = format
+            },
+            ct);
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            ErrorMessage = result.Message;
+            return RedirectToPage(new { ClassSectionId = classSectionId });
+        }
+
+        return File(result.Data.Content, result.Data.ContentType, result.Data.FileName);
     }
 
     private async Task LoadGradebookAsync(int userId)

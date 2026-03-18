@@ -1,0 +1,192 @@
+@page
+@model Presentation.Areas.Student.Pages.Transactions.HistoryModel
+@{
+    ViewData["Title"] = "Lịch sử giao dịch";
+    var source = Model.SourceType?.ToUpperInvariant() ?? "ALL";
+}
+
+<div class="tx-history-page">
+    <div class="tx-history-container">
+        <div class="tx-header">
+            <div class="tx-header-left">
+                <h1><i class="fas fa-receipt"></i> Lịch sử giao dịch</h1>
+                <p>Theo dõi giao dịch ví, nạp tiền và thanh toán đăng ký học phần.</p>
+            </div>
+            <a asp-area="Student" asp-page="/Wallet/Deposit" class="tx-back-link">
+                <i class="fas fa-wallet"></i> Nạp ví
+            </a>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="tx-alert tx-alert-error">
+                <i class="fas fa-exclamation-circle"></i> @Model.ErrorMessage
+            </div>
+        }
+
+        <div class="tx-summary-grid">
+            <div class="tx-summary-card">
+                <span class="tx-summary-label">Tổng bản ghi</span>
+                <span class="tx-summary-value">@Model.Result.TotalCount</span>
+            </div>
+            <div class="tx-summary-card">
+                <span class="tx-summary-label">Trang hiện tại</span>
+                <span class="tx-summary-value">@Model.PageNumber</span>
+            </div>
+            <div class="tx-summary-card">
+                <span class="tx-summary-label">Nguồn lọc</span>
+                <span class="tx-summary-value">@source</span>
+            </div>
+        </div>
+
+        <div class="tx-filter-card">
+            <form method="get" class="tx-filter-form">
+                <div class="tx-filter-grid">
+                    <div class="tx-filter-item">
+                        <label>Từ ngày</label>
+                        <input type="date" name="FromDate" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" />
+                    </div>
+                    <div class="tx-filter-item">
+                        <label>Đến ngày</label>
+                        <input type="date" name="ToDate" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" />
+                    </div>
+                    <div class="tx-filter-item">
+                        <label>Nguồn</label>
+                        <select name="SourceType">
+                            <option value="ALL" selected="@(source == "ALL")">Tất cả</option>
+                            <option value="WALLET" selected="@(source == "WALLET")">Ví</option>
+                            <option value="PAYMENT" selected="@(source == "PAYMENT")">Nạp tiền</option>
+                            <option value="ORDER" selected="@(source == "ORDER")">Đơn đăng ký</option>
+                        </select>
+                    </div>
+                    <div class="tx-filter-item">
+                        <label>Trạng thái</label>
+                        <input type="text" name="Status" placeholder="SUCCESS / PAID / FAILED..." value="@Model.Status" />
+                    </div>
+                    <div class="tx-filter-item tx-filter-item-wide">
+                        <label>Từ khóa</label>
+                        <input type="text" name="Keyword" placeholder="Mã đơn / MoMo / mô tả" value="@Model.Keyword" />
+                    </div>
+                    <div class="tx-filter-item">
+                        <label>Kích thước trang</label>
+                        <select name="PageSize">
+                            <option value="10" selected="@(Model.PageSize == 10)">10</option>
+                            <option value="20" selected="@(Model.PageSize == 20)">20</option>
+                            <option value="50" selected="@(Model.PageSize == 50)">50</option>
+                            <option value="100" selected="@(Model.PageSize == 100)">100</option>
+                        </select>
+                    </div>
+                </div>
+
+                <input type="hidden" name="PageNumber" value="1" />
+
+                <div class="tx-filter-actions">
+                    <button type="submit" class="tx-btn tx-btn-primary"><i class="fas fa-filter"></i> Lọc</button>
+                    <a asp-area="Student" asp-page="/Transactions/History" class="tx-btn tx-btn-light">Đặt lại</a>
+                </div>
+            </form>
+        </div>
+
+        @if (Model.Result.Items.Count == 0)
+        {
+            <div class="tx-empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Không có giao dịch phù hợp với bộ lọc.</p>
+            </div>
+        }
+        else
+        {
+            <div class="tx-table-wrapper">
+                <table class="tx-table">
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Nguồn</th>
+                            <th>Mã tham chiếu</th>
+                            <th>Loại/Trạng thái</th>
+                            <th class="text-right">Số tiền</th>
+                            <th class="text-right">Số dư trước</th>
+                            <th class="text-right">Số dư sau</th>
+                            <th>Mô tả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Result.Items)
+                        {
+                            <tr>
+                                <td>@item.OccurredAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <span class="tx-source-badge tx-source-@item.SourceType.ToLowerInvariant()">@item.SourceType</span>
+                                </td>
+                                <td class="tx-reference">@item.ReferenceCode</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.TransactionType))
+                                    {
+                                        <div class="tx-type">@item.TransactionType</div>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(item.Status))
+                                    {
+                                        <span class="tx-status-badge">@item.Status</span>
+                                    }
+                                </td>
+                                <td class="text-right tx-amount @(item.Amount >= 0 ? "tx-amount-positive" : "tx-amount-negative")">@item.Amount.ToString("#,##0.##")</td>
+                                <td class="text-right">@(item.BalanceBefore?.ToString("#,##0.##") ?? "—")</td>
+                                <td class="text-right">@(item.BalanceAfter?.ToString("#,##0.##") ?? "—")</td>
+                                <td class="tx-description">@(string.IsNullOrWhiteSpace(item.Description) ? "—" : item.Description)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <div class="tx-pagination">
+                    <a class="tx-page-btn @(Model.PageNumber <= 1 ? "disabled" : "")"
+                       asp-area="Student" asp-page="/Transactions/History"
+                       asp-route-PageNumber="@(Model.PageNumber - 1)"
+                       asp-route-PageSize="@Model.PageSize"
+                       asp-route-SourceType="@Model.SourceType"
+                       asp-route-Status="@Model.Status"
+                       asp-route-Keyword="@Model.Keyword"
+                       asp-route-FromDate="@(Model.FromDate?.ToString("yyyy-MM-dd"))"
+                       asp-route-ToDate="@(Model.ToDate?.ToString("yyyy-MM-dd"))">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+
+                    @for (var p = Math.Max(1, Model.PageNumber - 2); p <= Math.Min(Model.TotalPages, Model.PageNumber + 2); p++)
+                    {
+                        <a class="tx-page-btn @(p == Model.PageNumber ? "active" : "")"
+                           asp-area="Student" asp-page="/Transactions/History"
+                           asp-route-PageNumber="@p"
+                           asp-route-PageSize="@Model.PageSize"
+                           asp-route-SourceType="@Model.SourceType"
+                           asp-route-Status="@Model.Status"
+                           asp-route-Keyword="@Model.Keyword"
+                           asp-route-FromDate="@(Model.FromDate?.ToString("yyyy-MM-dd"))"
+                           asp-route-ToDate="@(Model.ToDate?.ToString("yyyy-MM-dd"))">
+                            @p
+                        </a>
+                    }
+
+                    <a class="tx-page-btn @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")"
+                       asp-area="Student" asp-page="/Transactions/History"
+                       asp-route-PageNumber="@(Model.PageNumber + 1)"
+                       asp-route-PageSize="@Model.PageSize"
+                       asp-route-SourceType="@Model.SourceType"
+                       asp-route-Status="@Model.Status"
+                       asp-route-Keyword="@Model.Keyword"
+                       asp-route-FromDate="@(Model.FromDate?.ToString("yyyy-MM-dd"))"
+                       asp-route-ToDate="@(Model.ToDate?.ToString("yyyy-MM-dd"))">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Student/Transactions/History.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}

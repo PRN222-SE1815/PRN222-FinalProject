@@ -36,6 +36,23 @@
                 <span class="info-label">Version: @gradebook.Version</span>
             </div>
 
+            <div class="action-bar" style="margin-top:0.75rem;">
+                <form method="post" asp-page-handler="Export" style="display:inline-flex;">
+                    <input type="hidden" name="classSectionId" value="@gradebook.ClassSectionId" />
+                    <input type="hidden" name="format" value="csv" />
+                    <button type="submit" class="btn btn-view btn-sm">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </button>
+                </form>
+                <form method="post" asp-page-handler="Export" style="display:inline-flex; margin-left:0.5rem;">
+                    <input type="hidden" name="classSectionId" value="@gradebook.ClassSectionId" />
+                    <input type="hidden" name="format" value="xlsx" />
+                    <button type="submit" class="btn btn-view btn-sm">
+                        <i class="fas fa-file-excel"></i> Export XLSX
+                    </button>
+                </form>
+            </div>
+
             @if (gradebook.GradeItems.Count == 0)
             {
                 <div class="empty-state">

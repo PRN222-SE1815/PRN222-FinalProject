@@ -23,6 +23,7 @@ builder.Services.Configure<MoMoSettings>(builder.Configuration.GetSection(MoMoSe
 builder.Services.Configure<ReliabilitySettings>(builder.Configuration.GetSection(ReliabilitySettings.SectionName));
 builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection(GeminiSettings.SectionName));
 builder.Services.Configure<AIChatSettings>(builder.Configuration.GetSection(AIChatSettings.SectionName));
+builder.Services.Configure<ExportSettings>(builder.Configuration.GetSection(ExportSettings.SectionName));
 builder.Services.AddHttpClient();
 
 // DI for services
@@ -39,7 +40,13 @@ builder.Services.AddScoped<INotificationRealtimePublisher, SignalRNotificationRe
 builder.Services.AddScoped<IRealtimeEventDispatcher, SignalRRealtimeEventDispatcher>();
 builder.Services.AddScoped<ICourseManagementService, CourseManagementService>();
 builder.Services.AddScoped<IGradebookService, GradebookService>();
+builder.Services.AddScoped<IGradeBookExportService, GradeBookExportService>();
+builder.Services.AddScoped<IGradeBookExportFileBuilder, CsvGradeBookExportFileBuilder>();
+builder.Services.AddScoped<IGradeBookExportFileBuilder, XlsxGradeBookExportFileBuilder>();
+builder.Services.AddScoped<IGradeExportAuthorizationPolicy, GradeExportAuthorizationPolicy>();
+builder.Services.AddScoped<IWeightedTotalCalculator, WeightedTotalCalculator>();
 builder.Services.AddScoped<IGradeAppealService, GradeAppealService>();
+builder.Services.AddScoped<ITransactionHistoryService, TransactionHistoryService>();
 builder.Services.AddScoped<IAIChatService, AIChatService>();
 builder.Services.AddScoped<IGeminiClientService, GeminiClientService>();
 builder.Services.AddScoped<IAIToolService, AIToolService>();
@@ -62,7 +69,9 @@ builder.Services.AddScoped<IChatModerationLogRepository, ChatModerationLogReposi
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IGradeBookRepository, GradeBookRepository>();
+builder.Services.AddScoped<IGradeBookExportReadRepository, GradeBookExportReadRepository>();
 builder.Services.AddScoped<IGradeAppealRepository, GradeAppealRepository>();
+builder.Services.AddScoped<ITransactionHistoryRepository, TransactionHistoryRepository>();
 builder.Services.AddScoped<IAIChatRepository, AIChatRepository>();
 builder.Services.AddScoped<IAIAnalyticsRepository, AIAnalyticsRepository>();
 

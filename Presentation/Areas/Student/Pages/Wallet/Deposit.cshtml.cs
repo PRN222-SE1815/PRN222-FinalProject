@@ -52,7 +52,12 @@ public class DepositModel : PageModel
         try
         {
             var userId = GetUserId();
-            var result = await _paymentService.CreateDepositAsync(userId, Amount);
+            var returnPath = Url.Page("/Payment/MoMoReturn") ?? "/Payment/MoMoReturn";
+            var notifyPath = Url.Page("/Payment/MoMoNotify") ?? "/Payment/MoMoNotify";
+            var returnUrl = $"{Request.Scheme}://{Request.Host}{returnPath}";
+            var notifyUrl = $"{Request.Scheme}://{Request.Host}{notifyPath}";
+
+            var result = await _paymentService.CreateDepositAsync(userId, Amount, returnUrl, notifyUrl);
 
             if (result.IsSuccess && result.Data != null)
             {

@@ -13,11 +13,13 @@ namespace Presentation.Areas.Admin.Pages.GradebookManagement;
 public class ReviewModel : PageModel
 {
     private readonly IGradebookService _gradebookService;
+    private readonly IGradeBookExportService _gradeBookExportService;
     private readonly ILogger<ReviewModel> _logger;
 
-    public ReviewModel(IGradebookService gradebookService, ILogger<ReviewModel> logger)
+    public ReviewModel(IGradebookService gradebookService, IGradeBookExportService gradeBookExportService, ILogger<ReviewModel> logger)
     {
         _gradebookService = gradebookService;
+        _gradeBookExportService = gradeBookExportService;
         _logger = logger;
     }
 
@@ -59,6 +61,29 @@ public class ReviewModel : PageModel
 
         await LoadGradebookAsync(userId);
         return Page();
+    }
+
+    public async Task<IActionResult> OnPostExportAsync(int classSectionId, string format, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        if (userId == 0) return RedirectToPage("/Account/Login");
+
+        var result = await _gradeBookExportService.ExportClassSectionAsync(
+            userId,
+            new ExportGradeBookRequest
+            {
+                ClassSectionId = classSectionId,
+                Format = format
+            },
+            ct);
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            ErrorMessage = result.Message;
+            return RedirectToPage(new { classSectionId });
+        }
+
+        return File(result.Data.Content, result.Data.ContentType, result.Data.FileName);
     }
 
     public async Task<IActionResult> OnPostApproveAsync()
