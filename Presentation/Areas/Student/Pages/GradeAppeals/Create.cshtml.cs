@@ -102,13 +102,17 @@ public class CreateModel : PageModel
         }
         else if (Input.SelectedGradeItemIds.Count > 1)
         {
-            var selectedItemNames = GradeItemOptions
+            var selectedItemDescriptions = GradeItemOptions
                 .Where(x => Input.SelectedGradeItemIds.Contains(x.GradeItemId))
                 .OrderBy(x => x.SortOrder)
-                .Select(x => x.ItemName)
+                .Select(x =>
+                {
+                    var currentScore = x.CurrentScore?.ToString("0.##") ?? "—";
+                    return $"{x.ItemName} ({currentScore}/{x.MaxScore:0.##})";
+                })
                 .ToList();
 
-            var selectedItemsNote = $"Grade items khiếu nại: {string.Join(", ", selectedItemNames)}";
+            var selectedItemsNote = $"Grade items khiếu nại: {string.Join(", ", selectedItemDescriptions)}";
             normalizedEvidenceNote = string.IsNullOrWhiteSpace(normalizedEvidenceNote)
                 ? selectedItemsNote
                 : $"{normalizedEvidenceNote}\n{selectedItemsNote}";

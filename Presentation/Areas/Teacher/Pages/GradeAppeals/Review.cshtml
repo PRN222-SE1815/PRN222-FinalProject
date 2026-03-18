@@ -54,9 +54,7 @@
                                    asp-page="/TeacherGrade/Index"
                                    asp-route-ClassSectionId="@appeal.ClassSectionId"
                                    asp-route-HighlightEnrollmentId="@appeal.EnrollmentId"
-                                   asp-route-HighlightGradeItemId="@appeal.GradeItemId"
                                    asp-route-AppealId="@appeal.AppealId"
-                                   asp-route-PrefillNewScore="@Model.ResolveInput.NewScore"
                                    asp-fragment="enrollment-@appeal.EnrollmentId"
                                    class="btn-classsection-link">
                                     <i class="fas fa-table"></i>
@@ -66,11 +64,26 @@
                                 </a>
                             </span>
                         </div>
-                        @if (appeal.GradeItemId.HasValue)
+                        @if (Model.AppealedGradeItems.Count > 0)
                         {
                             <div class="info-row">
                                 <span class="info-label"><i class="fas fa-pen"></i> Grade Item</span>
-                                <span class="info-value">@(appeal.GradeItemName ?? appeal.GradeItemId.ToString())</span>
+                                <span class="info-value">
+                                    @if (Model.AppealedGradeItems.Count == 1)
+                                    {
+                                        var item = Model.AppealedGradeItems[0];
+                                        <text>@item.ItemName — @(item.CurrentScore?.ToString("0.##") ?? "—") / @item.MaxScore.ToString("0.##")</text>
+                                    }
+                                    else
+                                    {
+                                        <ul class="grade-item-list">
+                                            @foreach (var item in Model.AppealedGradeItems)
+                                            {
+                                                <li>@item.ItemName — @(item.CurrentScore?.ToString("0.##") ?? "—") / @item.MaxScore.ToString("0.##")</li>
+                                            }
+                                        </ul>
+                                    }
+                                </span>
                             </div>
                         }
                         <div class="info-row">
@@ -151,12 +164,47 @@
                                     <div class="score-update-title">
                                         <i class="fas fa-pen-to-square"></i> Cập nhật điểm mới (chỉ khi chọn Chấp nhận)
                                     </div>
-                                    <div class="form-group">
-                                        <label asp-for="ResolveInput.NewScore" class="form-label">Điểm mới</label>
-                                        <input asp-for="ResolveInput.NewScore" class="form-input" type="number" step="0.01"
-                                               placeholder="Nhập điểm mới nếu cần cập nhật" />
-                                        <span asp-validation-for="ResolveInput.NewScore" class="field-validation-error"></span>
-                                    </div>
+                                    @if (Model.ResolveInput.ScoreUpdates.Count == 0)
+                                    {
+                                        <div class="form-group">Không có grade item hợp lệ để cập nhật điểm.</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="table-wrapper">
+                                            <table class="grade-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Grade item khiếu nại</th>
+                                                        <th>Điểm mới</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @for (var i = 0; i < Model.ResolveInput.ScoreUpdates.Count; i++)
+                                                    {
+                                                        var row = Model.ResolveInput.ScoreUpdates[i];
+                                                        <tr>
+                                                            <td>
+                                                                <input type="hidden" asp-for="ResolveInput.ScoreUpdates[i].Index" />
+                                                                <input type="hidden" asp-for="ResolveInput.ScoreUpdates[i].GradeItemId" />
+                                                                <input type="hidden" asp-for="ResolveInput.ScoreUpdates[i].GradeEntryId" />
+                                                                <input type="hidden" asp-for="ResolveInput.ScoreUpdates[i].GradeItemName" />
+                                                                <input type="hidden" asp-for="ResolveInput.ScoreUpdates[i].CurrentScore" />
+                                                                <input type="hidden" asp-for="ResolveInput.ScoreUpdates[i].MaxScore" />
+                                                                <strong>@row.GradeItemName</strong>
+                                                                <div class="item-meta">Hiện tại: @(row.CurrentScore?.ToString("0.##") ?? "—") / @row.MaxScore.ToString("0.##")</div>
+                                                            </td>
+                                                            <td>
+                                                                <input asp-for="ResolveInput.ScoreUpdates[i].NewScore" class="form-input" type="number" step="0.01"
+                                                                       min="0" max="@row.MaxScore.ToString("0.##")"
+                                                                       placeholder="Nhập điểm mới (tuỳ chọn)" />
+                                                                <span asp-validation-for="ResolveInput.ScoreUpdates[i].NewScore" class="field-validation-error"></span>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
                                 </div>
 
                                 <button type="submit" class="btn-resolve">
@@ -245,14 +293,15 @@
         (function () {
             const outcomeSelect = document.getElementById('ResolveInput_Outcome');
             const scoreBlock = document.getElementById('score-update-block');
-            const newScoreInput = document.getElementById('ResolveInput_NewScore');
             if (!outcomeSelect || !scoreBlock) return;
+
+            const scoreInputs = Array.from(document.querySelectorAll('input[name$=".NewScore"]'));
 
             const toggleScoreBlock = () => {
                 const isApproved = outcomeSelect.value === 'APPROVED';
                 scoreBlock.classList.toggle('hidden', !isApproved);
-                if (!isApproved && newScoreInput) {
-                    newScoreInput.value = '';
+                if (!isApproved) {
+                    scoreInputs.forEach(input => input.value = '');
                 }
             };
 

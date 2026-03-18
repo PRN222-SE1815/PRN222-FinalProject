@@ -55,9 +55,40 @@
                         Đang xem ngữ cảnh khiếu nại cho Enrollment #@Model.HighlightEnrollmentId
                     </div>
                     <form method="get" asp-area="Teacher" asp-page="/GradeAppeals/Review" asp-route-id="@Model.AppealId" class="appeal-score-form">
-                        <label class="quick-score-label">Điểm mới</label>
-                        <input type="number" name="PrefillNewScore" value="@(Model.PrefillNewScore?.ToString("0.##"))"
-                               class="quick-score-input" step="0.01" min="0" max="10" placeholder="Nhập điểm" />
+                        @if (Model.AppealFocusGradeItems.Count > 0)
+                        {
+                            <div class="table-wrapper" style="margin-bottom:0.5rem;">
+                                <table class="grade-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Grade item khiếu nại</th>
+                                            <th>Điểm mới</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (var i = 0; i < Model.AppealFocusGradeItems.Count; i++)
+                                        {
+                                            var item = Model.AppealFocusGradeItems[i];
+                                            <tr>
+                                                <td>
+                                                    <input type="hidden" name="PrefillScoreUpdates[@i].GradeItemId" value="@item.GradeItemId" />
+                                                    <strong>@item.ItemName</strong>
+                                                    <div class="item-meta">Hiện tại: @(item.CurrentScore?.ToString("0.##") ?? "—") / @item.MaxScore.ToString("0.##")</div>
+                                                </td>
+                                                <td>
+                                                    <input type="number"
+                                                           name="PrefillScoreUpdates[@i].NewScore"
+                                                           value="@(item.PrefillNewScore?.ToString("0.##"))"
+                                                           class="quick-score-input"
+                                                           step="0.01" min="0" max="@item.MaxScore.ToString("0.##")"
+                                                           placeholder="Nhập điểm" />
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-share"></i> Áp dụng vào xử lý khiếu nại
                         </button>
@@ -119,7 +150,7 @@
                                         @foreach (var item in gradebook.GradeItems)
                                         {
                                             row.Scores.TryGetValue(item.GradeItemId, out var cellScore);
-                                            <td class="score-cell @(Model.HighlightEnrollmentId == row.EnrollmentId && Model.HighlightGradeItemId == item.GradeItemId ? "score-cell-focus" : "")">
+                                            <td class="score-cell @(Model.HighlightEnrollmentId == row.EnrollmentId && (Model.HighlightGradeItemId == item.GradeItemId || Model.AppealFocusGradeItemIds.Contains(item.GradeItemId)) ? "score-cell-focus" : "")">
                                                 <input type="hidden" name="SaveRequest.Scores[@scoreIdx].GradeItemId" value="@item.GradeItemId" />
                                                 <input type="hidden" name="SaveRequest.Scores[@scoreIdx].EnrollmentId" value="@row.EnrollmentId" />
                                                 <input type="number"

@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using BusinessLogic.DTOs.GradeAppeals;
+using BusinessLogic.DTOs.Responses.Gradebook;
 using BusinessLogic.Services.Interfaces;
 using BusinessObject.Enum;
 using Microsoft.AspNetCore.Authorization;
@@ -24,12 +25,13 @@ public class ReviewModel : PageModel
     }
 
     public GradeAppealDetailDto? Appeal { get; set; }
+    public List<AppealedGradeItemViewModel> AppealedGradeItems { get; set; } = [];
 
     [BindProperty]
     public ResolveInputModel ResolveInput { get; set; } = new();
 
     [BindProperty(SupportsGet = true)]
-    public decimal? PrefillNewScore { get; set; }
+    public List<PrefillScoreInputModel> PrefillScoreUpdates { get; set; } = [];
 
     [TempData]
     public string? SuccessMessage { get; set; }
@@ -49,11 +51,26 @@ public class ReviewModel : PageModel
             return RedirectToPage("/GradeAppeals/Queue", new { area = "Teacher" });
         }
 
+        await LoadAppealedGradeItemsAsync(userId, ct);
+
         ResolveInput.AppealId = Appeal.AppealId;
-        if (PrefillNewScore.HasValue)
+        InitializeResolveScoreUpdates();
+
+        if (PrefillScoreUpdates.Count > 0)
         {
-            ResolveInput.NewScore = PrefillNewScore;
             ResolveInput.Outcome = GradeAppealStatus.Approved;
+
+            var prefillByGradeItemId = PrefillScoreUpdates
+                .Where(x => x.GradeItemId > 0)
+                .ToDictionary(x => x.GradeItemId, x => x.NewScore);
+
+            foreach (var row in ResolveInput.ScoreUpdates)
+            {
+                if (prefillByGradeItemId.TryGetValue(row.GradeItemId, out var newScore))
+                {
+                    row.NewScore = newScore;
+                }
+            }
         }
         return Page();
     }
@@ -96,41 +113,60 @@ public class ReviewModel : PageModel
             return RedirectToPage("/GradeAppeals/Queue", new { area = "Teacher" });
         }
 
-        if (string.Equals(ResolveInput.Outcome, GradeAppealStatus.Approved, StringComparison.OrdinalIgnoreCase)
-            && ResolveInput.NewScore.HasValue)
+        await LoadAppealedGradeItemsAsync(userId, ct);
+        InitializeResolveScoreUpdates();
+
+        var scoreChanges = new List<ResolveGradeAppealScoreChangeRequest>();
+        if (string.Equals(ResolveInput.Outcome, GradeAppealStatus.Approved, StringComparison.OrdinalIgnoreCase))
         {
-            if (!Appeal.GradeItemId.HasValue)
+            if (AppealedGradeItems.Count == 0)
             {
-                ModelState.AddModelError(nameof(ResolveInput.NewScore), "Khiếu nại không gắn với một Grade Item cụ thể nên không thể nhập điểm mới tại đây.");
+                ModelState.AddModelError(string.Empty, "Không tìm thấy Grade Item khả dụng để cập nhật điểm.");
             }
             else
             {
-                var gradebookResult = await _gradebookService.GetGradebookAsync(userId, nameof(UserRole.TEACHER), Appeal.ClassSectionId, ct);
-                if (!gradebookResult.IsSuccess || gradebookResult.Data is null)
+                foreach (var row in ResolveInput.ScoreUpdates)
                 {
-                    ModelState.AddModelError(string.Empty, gradebookResult.Message);
-                }
-                else
-                {
-                    var gradeEntry = gradebookResult.Data.GradeEntries.FirstOrDefault(x =>
-                        x.EnrollmentId == Appeal.EnrollmentId
-                        && x.GradeItemId == Appeal.GradeItemId.Value);
-
-                    if (gradeEntry is null)
+                    if (!row.NewScore.HasValue)
                     {
-                        ModelState.AddModelError(nameof(ResolveInput.NewScore), "Không tìm thấy Grade Entry tương ứng để cập nhật điểm.");
+                        continue;
+                    }
+
+                    var selectedItem = AppealedGradeItems.FirstOrDefault(x => x.GradeItemId == row.GradeItemId);
+
+                    if (selectedItem is null)
+                    {
+                        ModelState.AddModelError(string.Empty, "Grade Item được chọn không hợp lệ.");
+                    }
+                    else if (!selectedItem.GradeEntryId.HasValue)
+                    {
+                        ModelState.AddModelError(string.Empty, $"Không tìm thấy Grade Entry cho {selectedItem.ItemName}.");
+                    }
+                    else if (row.NewScore.Value < 0 || row.NewScore.Value > selectedItem.MaxScore)
+                    {
+                        ModelState.AddModelError($"ResolveInput.ScoreUpdates[{row.Index}].NewScore", $"Điểm của {selectedItem.ItemName} phải nằm trong khoảng từ 0 đến {selectedItem.MaxScore:0.##}.");
                     }
                     else
                     {
-                        ResolveInput.GradeEntryId = gradeEntry.GradeEntryId;
+                        row.GradeEntryId = selectedItem.GradeEntryId;
+                        scoreChanges.Add(new ResolveGradeAppealScoreChangeRequest
+                        {
+                            GradeEntryId = selectedItem.GradeEntryId.Value,
+                            NewScore = row.NewScore.Value
+                        });
                     }
                 }
             }
         }
         else
         {
-            ResolveInput.NewScore = null;
-            ResolveInput.GradeEntryId = null;
+            var hasAnyScoreInput = ResolveInput.ScoreUpdates.Any(x => x.NewScore.HasValue);
+            if (hasAnyScoreInput)
+            {
+                ModelState.AddModelError(string.Empty, "Chỉ được nhập điểm mới khi kết quả là Chấp nhận.");
+            }
+
+            ResolveInput.ScoreUpdates.ForEach(x => x.NewScore = null);
         }
 
         if (!ModelState.IsValid)
@@ -145,8 +181,7 @@ public class ReviewModel : PageModel
                 AppealId = ResolveInput.AppealId,
                 Outcome = ResolveInput.Outcome,
                 ResponseMessage = ResolveInput.ResponseMessage,
-                GradeEntryId = ResolveInput.GradeEntryId,
-                NewScore = ResolveInput.NewScore
+                ScoreChanges = scoreChanges
             };
 
             var result = await _appealService.ResolveAppealAsync(userId, request, ct);
@@ -165,7 +200,83 @@ public class ReviewModel : PageModel
         }
 
         await LoadAppealAsync(userId, ResolveInput.AppealId, ct);
+        await LoadAppealedGradeItemsAsync(userId, ct);
+        InitializeResolveScoreUpdates();
         return Page();
+    }
+
+    private void InitializeResolveScoreUpdates()
+    {
+        var existingByGradeItemId = ResolveInput.ScoreUpdates
+            .Where(x => x.GradeItemId > 0)
+            .ToDictionary(x => x.GradeItemId, x => x);
+
+        ResolveInput.ScoreUpdates = AppealedGradeItems
+            .Select((x, idx) =>
+            {
+                existingByGradeItemId.TryGetValue(x.GradeItemId, out var existing);
+                return new ResolveScoreUpdateInputModel
+                {
+                    Index = idx,
+                    GradeItemId = x.GradeItemId,
+                    GradeEntryId = x.GradeEntryId,
+                    GradeItemName = x.ItemName,
+                    CurrentScore = x.CurrentScore,
+                    MaxScore = x.MaxScore,
+                    NewScore = existing?.NewScore
+                };
+            })
+            .ToList();
+    }
+
+    private async Task LoadAppealedGradeItemsAsync(int userId, CancellationToken ct)
+    {
+        AppealedGradeItems = [];
+        if (Appeal is null)
+        {
+            return;
+        }
+
+        var gradebookResult = await _gradebookService.GetGradebookAsync(userId, nameof(UserRole.TEACHER), Appeal.ClassSectionId, ct);
+        if (!gradebookResult.IsSuccess || gradebookResult.Data is null)
+        {
+            if (!string.IsNullOrWhiteSpace(gradebookResult.Message))
+            {
+                ErrorMessage ??= gradebookResult.Message;
+            }
+            return;
+        }
+
+        var gradebook = gradebookResult.Data;
+        var entryByGradeItemId = gradebook.GradeEntries
+            .Where(x => x.EnrollmentId == Appeal.EnrollmentId)
+            .ToDictionary(x => x.GradeItemId, x => x);
+
+        IEnumerable<GradeItemResponse> targetItems;
+
+        if (Appeal.GradeItemId.HasValue)
+        {
+            targetItems = gradebook.GradeItems.Where(x => x.GradeItemId == Appeal.GradeItemId.Value);
+        }
+        else
+        {
+            var appealedItemNames = ParseAppealedItemNames(Appeal.EvidenceNote);
+            targetItems = appealedItemNames.Count == 0
+                ? gradebook.GradeItems
+                : gradebook.GradeItems.Where(x => appealedItemNames.Contains(x.ItemName));
+        }
+
+        AppealedGradeItems = targetItems
+            .OrderBy(x => x.SortOrder)
+            .Select(x => new AppealedGradeItemViewModel
+            {
+                GradeItemId = x.GradeItemId,
+                ItemName = x.ItemName,
+                MaxScore = x.MaxScore,
+                CurrentScore = entryByGradeItemId.TryGetValue(x.GradeItemId, out var entry) ? entry.Score : null,
+                GradeEntryId = entryByGradeItemId.TryGetValue(x.GradeItemId, out var selectedEntry) ? selectedEntry.GradeEntryId : null
+            })
+            .ToList();
     }
 
     private async Task LoadAppealAsync(int userId, long appealId, CancellationToken ct)
@@ -195,6 +306,45 @@ public class ReviewModel : PageModel
         return claim is not null && int.TryParse(claim.Value, out var id) ? id : 0;
     }
 
+    private static HashSet<string> ParseAppealedItemNames(string? evidenceNote)
+    {
+        if (string.IsNullOrWhiteSpace(evidenceNote))
+        {
+            return [];
+        }
+
+        const string prefix = "Grade items khiếu nại:";
+        var lines = evidenceNote
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        var targetLine = lines.FirstOrDefault(x => x.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+        if (string.IsNullOrWhiteSpace(targetLine))
+        {
+            return [];
+        }
+
+        var rawItems = targetLine[prefix.Length..]
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var rawItem in rawItems)
+        {
+            var itemName = rawItem;
+            var scoreHintIndex = rawItem.IndexOf('(');
+            if (scoreHintIndex >= 0)
+            {
+                itemName = rawItem[..scoreHintIndex].Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(itemName))
+            {
+                result.Add(itemName);
+            }
+        }
+
+        return result;
+    }
+
     public sealed class ResolveInputModel
     {
         public long AppealId { get; set; }
@@ -208,10 +358,32 @@ public class ReviewModel : PageModel
         [Display(Name = "Phản hồi")]
         public string ResponseMessage { get; set; } = string.Empty;
 
-        [Display(Name = "Grade Entry ID (tuỳ chọn)")]
-        public int? GradeEntryId { get; set; }
+        public List<ResolveScoreUpdateInputModel> ScoreUpdates { get; set; } = [];
+    }
 
-        [Display(Name = "Điểm mới (tuỳ chọn)")]
+    public sealed class AppealedGradeItemViewModel
+    {
+        public int GradeItemId { get; set; }
+        public int? GradeEntryId { get; set; }
+        public string ItemName { get; set; } = string.Empty;
+        public decimal? CurrentScore { get; set; }
+        public decimal MaxScore { get; set; }
+    }
+
+    public sealed class ResolveScoreUpdateInputModel
+    {
+        public int Index { get; set; }
+        public int GradeItemId { get; set; }
+        public int? GradeEntryId { get; set; }
+        public string GradeItemName { get; set; } = string.Empty;
+        public decimal? CurrentScore { get; set; }
+        public decimal MaxScore { get; set; }
+        public decimal? NewScore { get; set; }
+    }
+
+    public sealed class PrefillScoreInputModel
+    {
+        public int GradeItemId { get; set; }
         public decimal? NewScore { get; set; }
     }
 }

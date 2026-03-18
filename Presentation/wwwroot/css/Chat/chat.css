@@ -159,6 +159,7 @@
     flex-direction: column;
     overflow: hidden;
     min-width: 0;
+    min-height: 0;
 }
 
 /* Header */
@@ -216,6 +217,7 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-height: 0;
 }
 
 .load-more-container {
@@ -554,6 +556,105 @@
 
 .btn-attach:hover {
     color: var(--chat-primary);
+}
+
+.btn-emoji {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.15rem;
+    color: #65676b;
+    padding: 8px;
+    border-radius: 50%;
+    transition: color 0.2s, background 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-emoji:hover {
+    color: var(--chat-primary);
+    background: #e4e6eb;
+}
+
+.emoji-picker {
+    margin-top: 8px;
+    padding: 8px;
+    border: 1px solid var(--chat-border);
+    border-radius: 12px;
+    background: #fff;
+    display: block;
+    max-height: 160px;
+    overflow: hidden;
+}
+
+.emoji-picker-toolbar {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 8px;
+}
+
+.emoji-picker-tab {
+    border: 1px solid #e6e6e6;
+    background: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    color: #65676b;
+}
+
+.emoji-picker-tab.active {
+    color: var(--chat-primary);
+    border-color: #b3d4fb;
+    background: #e7f3ff;
+}
+
+.emoji-picker-tab-icon {
+    font-size: 0.9rem;
+}
+
+.emoji-picker-content {
+    max-height: 110px;
+    overflow-y: auto;
+}
+
+.emoji-picker-group-title {
+    font-size: 0.75rem;
+    color: #65676b;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+    gap: 6px;
+}
+
+.emoji-picker-empty {
+    font-size: 0.8rem;
+    color: #999;
+    padding: 10px 4px;
+}
+
+.emoji-item {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    border-radius: 6px;
+    padding: 4px;
+}
+
+.emoji-item:hover {
+    background: #f0f2f5;
 }
 
 .attachment-preview-area {

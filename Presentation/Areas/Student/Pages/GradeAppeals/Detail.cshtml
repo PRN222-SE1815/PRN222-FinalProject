@@ -71,27 +71,45 @@
                                 }
                             </span>
                         </div>
-                        @if (appeal.GradeItemId.HasValue)
+                        @if (Model.AppealedGradeItems.Count > 0)
                         {
                             <div class="info-row">
                                 <span class="info-label"><i class="fas fa-pen"></i> Grade Item</span>
                                 <span class="info-value">
-                                    @(appeal.GradeItemName ?? appeal.GradeItemId.ToString())
-                                    <span class="info-value-secondary">
-                                        Điểm hiện tại:
-                                        @if (appeal.GradeItemScore.HasValue)
-                                        {
-                                            <strong>@appeal.GradeItemScore.Value.ToString("0.##")</strong>
-                                            @if (appeal.GradeItemMaxScore.HasValue)
+                                    @if (Model.AppealedGradeItems.Count == 1)
+                                    {
+                                        var item = Model.AppealedGradeItems[0];
+                                        <text>@item.ItemName</text>
+                                        <span class="info-value-secondary">
+                                            Điểm hiện tại:
+                                            @if (item.CurrentScore.HasValue)
                                             {
-                                                @: / @appeal.GradeItemMaxScore.Value.ToString("0.##")
+                                                <strong>@item.CurrentScore.Value.ToString("0.##")</strong>
                                             }
-                                        }
-                                        else
-                                        {
-                                            <strong>—</strong>
-                                        }
-                                    </span>
+                                            else
+                                            {
+                                                <strong>—</strong>
+                                            }
+                                            @if (item.MaxScore.HasValue)
+                                            {
+                                                @: / @item.MaxScore.Value.ToString("0.##")
+                                            }
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <ul class="grade-item-list">
+                                            @foreach (var item in Model.AppealedGradeItems)
+                                            {
+                                                <li>
+                                                    @item.ItemName
+                                                    <span class="info-value-secondary">
+                                                        (@(item.CurrentScore?.ToString("0.##") ?? "—")/@(item.MaxScore?.ToString("0.##") ?? "—"))
+                                                    </span>
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
                                 </span>
                             </div>
                         }

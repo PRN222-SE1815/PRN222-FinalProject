@@ -19,11 +19,16 @@ public sealed class AIToolService : IAIToolService
     ];
 
     private readonly IAIAnalyticsRepository _aiAnalyticsRepository;
+    private readonly ISemesterRepository _semesterRepository;
     private readonly ILogger<AIToolService> _logger;
 
-    public AIToolService(IAIAnalyticsRepository aiAnalyticsRepository, ILogger<AIToolService> logger)
+    public AIToolService(
+        IAIAnalyticsRepository aiAnalyticsRepository,
+        ISemesterRepository semesterRepository,
+        ILogger<AIToolService> logger)
     {
         _aiAnalyticsRepository = aiAnalyticsRepository;
+        _semesterRepository = semesterRepository;
         _logger = logger;
     }
 
@@ -125,7 +130,7 @@ public sealed class AIToolService : IAIToolService
 
     private async Task<object> ExecuteCourseCatalogAsync(int? studentProgramId, JsonElement? args, CancellationToken ct)
     {
-        var semesterId = GetRequiredInt(args, "semesterId");
+        var semesterId = await ResolveSemesterIdAsync(args, ct);
         var programId = GetNullableInt(args, "programId") ?? studentProgramId;
         return await _aiAnalyticsRepository.GetCourseCatalogAsync(programId, semesterId, ct);
     }
@@ -138,9 +143,48 @@ public sealed class AIToolService : IAIToolService
 
     private async Task<object> ExecuteSimulatePlanAsync(int studentId, JsonElement? args, CancellationToken ct)
     {
-        var semesterId = GetRequiredInt(args, "semesterId");
+        var semesterId = await ResolveSemesterIdAsync(args, ct);
         var candidateCourseIds = GetRequiredIntArray(args, "candidateCourseIds");
         return await _aiAnalyticsRepository.GetPlanConstraintDataAsync(studentId, semesterId, candidateCourseIds, ct);
+    }
+
+    private async Task<int> ResolveSemesterIdAsync(JsonElement? args, CancellationToken ct)
+    {
+        var semesterId = GetNullableInt(args, "semesterId");
+        if (semesterId.HasValue)
+        {
+            return semesterId.Value;
+        }
+
+        var semesterCode = GetNullableString(args, "semesterCode")
+            ?? GetNullableString(args, "semester");
+
+        if (!string.IsNullOrWhiteSpace(semesterCode))
+        {
+            var normalized = semesterCode.Trim();
+            var semesters = await _semesterRepository.GetAllSemestersAsync();
+
+            var matchedSemester = semesters.FirstOrDefault(x =>
+                string.Equals(x.SemesterCode, normalized, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(x.SemesterName, normalized, StringComparison.OrdinalIgnoreCase));
+
+            if (matchedSemester is null)
+            {
+                throw new ArgumentException($"Invalid semesterCode argument: {semesterCode}");
+            }
+
+            _logger.LogInformation("AI tool resolved semesterCode {SemesterCode} -> {SemesterId}", normalized, matchedSemester.SemesterId);
+            return matchedSemester.SemesterId;
+        }
+
+        var activeSemester = await _semesterRepository.GetActiveSemesterAsync();
+        if (activeSemester is null)
+        {
+            throw new ArgumentException("Missing required integer argument: semesterId (and no active semester found)");
+        }
+
+        _logger.LogInformation("AI tool fallback: using active semester {SemesterId}", activeSemester.SemesterId);
+        return activeSemester.SemesterId;
     }
 
     private static int GetRequiredInt(JsonElement? args, string propertyName)
@@ -173,6 +217,32 @@ public sealed class AIToolService : IAIToolService
             JsonValueKind.Null => null,
             _ => throw new ArgumentException($"Invalid integer argument: {propertyName}")
         };
+    }
+
+    private static string? GetNullableString(JsonElement? args, string propertyName)
+    {
+        if (!args.HasValue || args.Value.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        if (!args.Value.TryGetProperty(propertyName, out var valueElement))
+        {
+            return null;
+        }
+
+        if (valueElement.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+
+        if (valueElement.ValueKind != JsonValueKind.String)
+        {
+            throw new ArgumentException($"Invalid string argument: {propertyName}");
+        }
+
+        var value = valueElement.GetString()?.Trim();
+        return string.IsNullOrWhiteSpace(value) ? null : value;
     }
 
     private static IReadOnlyCollection<int> GetRequiredIntArray(JsonElement? args, string propertyName)

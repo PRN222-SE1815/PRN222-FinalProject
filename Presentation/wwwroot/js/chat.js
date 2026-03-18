@@ -15,90 +15,121 @@ let groupSearchDebounceTimer = null;
 const selectedGroupMembers = new Map();
 // Pending file attachments: array of { fileUrl, fileType, fileSizeBytes, originalName }
 let pendingAttachments = [];
+const emojiGroups = [
+    { key: "recent", title: "Gần đây", icon: "🕘", emojis: [] },
+    { key: "smileys", title: "Mặt cười", icon: "😀", emojis: ["😀", "😁", "😂", "🤣", "😅", "😊", "🙂", "😉", "😍", "😘", "😎", "🤔", "🥳", "😭", "😡", "😴", "🥲", "🤩", "🤗", "🫶"] },
+    { key: "gestures", title: "Cử chỉ", icon: "👍", emojis: ["👍", "👎", "👏", "🙏", "💪", "🤝", "👌", "✌️", "🤞", "👋", "🙌", "👏🏻", "👏🏼", "👏🏽", "👏🏾", "👏🏿"] },
+    { key: "hearts", title: "Biểu tượng", icon: "❤️", emojis: ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💯", "🔥", "✨", "🌟", "✅", "❌", "🎉"] },
+    { key: "school", title: "Học tập", icon: "🎓", emojis: ["📚", "📖", "📝", "🎓", "🏫", "💬", "📌", "📎", "🧠", "⌛", "🗓️", "📊", "📈", "🧪", "💻", "🖥️"] }
+];
+const recentEmojiStorageKey = "chat.recent-emojis";
+const maxRecentEmojis = 24;
+let activeEmojiGroupKey = "recent";
 
 // ==================== SignalR Connection ====================
-const connection = new signalR.HubConnectionBuilder()
-    .withUrl("/chatHub")
-    .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-    .configureLogging(signalR.LogLevel.Warning)
-    .build();
+const hasSignalR = typeof window.signalR !== "undefined";
+const connection = hasSignalR
+    ? new signalR.HubConnectionBuilder()
+        .withUrl("/chatHub")
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+        .configureLogging(signalR.LogLevel.Warning)
+        .build()
+    : null;
+
+function invokeHub(methodName, ...args) {
+    if (!connection) {
+        showToast("Chat realtime client chưa được tải. Vui lòng tải lại trang.", "error");
+        return Promise.resolve();
+    }
+
+    return connection.invoke(methodName, ...args).catch(logError);
+}
 
 // ==================== Hub Event Handlers ====================
+if (connection) {
+    connection.on("ReceiveMessage", function (msg) {
+        if (msg.roomId === selectedRoomId) {
+            appendMessage(msg);
+            // Mark as read
+            invokeHub("MarkRead", selectedRoomId, msg.messageId);
+        }
+    });
 
-connection.on("ReceiveMessage", function (msg) {
-    if (msg.roomId === selectedRoomId) {
-        appendMessage(msg);
-        // Mark as read
-        connection.invoke("MarkRead", selectedRoomId, msg.messageId).catch(logError);
-    }
-});
-
-connection.on("MessageEdited", function (data) {
-    if (data.roomId === selectedRoomId) {
-        const row = document.querySelector(`.message-row[data-message-id="${data.messageId}"]`);
-        if (row) {
-            const contentEl = row.querySelector(".message-content");
-            if (contentEl) contentEl.textContent = data.content;
-            // Show (edited) indicator
-            let editedSpan = row.querySelector(".message-edited");
-            if (!editedSpan) {
-                editedSpan = document.createElement("span");
-                editedSpan.className = "message-edited";
-                editedSpan.textContent = "(edited)";
-                const bubble = row.querySelector(".message-bubble");
-                const timeEl = bubble.querySelector(".message-time");
-                bubble.insertBefore(editedSpan, timeEl);
+    connection.on("MessageEdited", function (data) {
+        if (data.roomId === selectedRoomId) {
+            const row = document.querySelector(`.message-row[data-message-id="${data.messageId}"]`);
+            if (row) {
+                const contentEl = row.querySelector(".message-content");
+                if (contentEl) contentEl.textContent = data.content;
+                // Show (edited) indicator
+                let editedSpan = row.querySelector(".message-edited");
+                if (!editedSpan) {
+                    editedSpan = document.createElement("span");
+                    editedSpan.className = "message-edited";
+                    editedSpan.textContent = "(edited)";
+                    const bubble = row.querySelector(".message-bubble");
+                    const timeEl = bubble.querySelector(".message-time");
+                    bubble.insertBefore(editedSpan, timeEl);
+                }
             }
         }
-    }
-});
+    });
 
-connection.on("MessageDeleted", function (data) {
-    if (data.roomId === selectedRoomId) {
-        const row = document.querySelector(`.message-row[data-message-id="${data.messageId}"]`);
-        if (row) {
-            row.classList.add("deleted");
-            const bubble = row.querySelector(".message-bubble");
-            bubble.innerHTML =
-                `<span class="message-deleted-text"><i class="fas fa-ban"></i> This message was deleted</span>` +
-                `<span class="message-time">${bubble.querySelector(".message-time")?.outerHTML || ""}</span>`;
-            // Remove action buttons
-            const actions = row.querySelector(".message-actions");
-            if (actions) actions.remove();
+    connection.on("MessageDeleted", function (data) {
+        if (data.roomId === selectedRoomId) {
+            const row = document.querySelector(`.message-row[data-message-id="${data.messageId}"]`);
+            if (row) {
+                row.classList.add("deleted");
+                const bubble = row.querySelector(".message-bubble");
+                bubble.innerHTML =
+                    `<span class="message-deleted-text"><i class="fas fa-ban"></i> This message was deleted</span>` +
+                    `<span class="message-time">${bubble.querySelector(".message-time")?.outerHTML || ""}</span>`;
+                // Remove action buttons
+                const actions = row.querySelector(".message-actions");
+                if (actions) actions.remove();
+            }
         }
-    }
-});
+    });
 
-connection.on("RoomCreated", function (room) {
-    // Add to sidebar and select it
-    addRoomToSidebar(room);
-    closeNewChatModal();
-    selectRoom(room.roomId);
-});
+    connection.on("RoomCreated", function (room) {
+        // Add to sidebar and select it
+        addRoomToSidebar(room);
+        closeNewChatModal();
+        selectRoom(room.roomId);
+    });
 
-connection.on("Error", function (message) {
-    showToast(message, "error");
-});
+    connection.on("Error", function (message) {
+        showToast(message, "error");
+    });
+}
 
 // ==================== Connection Management ====================
 
-connection.onreconnecting(function () {
-    showToast("Reconnecting to chat...", "warning");
-});
+if (connection) {
+    connection.onreconnecting(function () {
+        showToast("Reconnecting to chat...", "warning");
+    });
 
-connection.onreconnected(function () {
-    showToast("Reconnected!", "success");
-    // Re-join current room
-    if (selectedRoomId > 0) {
-        connection.invoke("JoinRoom", selectedRoomId).catch(logError);
-    }
-});
+    connection.onreconnected(function () {
+        showToast("Reconnected!", "success");
+        // Re-join current room
+        if (selectedRoomId > 0) {
+            invokeHub("JoinRoom", selectedRoomId);
+        }
+    });
 
-connection.onclose(function () {
-    showToast("Disconnected from chat. Please refresh.", "error");
-});
+    connection.onclose(function () {
+        showToast("Disconnected from chat. Please refresh.", "error");
+    });
+}
 
 async function startConnection() {
+    if (!connection) {
+        console.error("SignalR script was not loaded.");
+        showToast("Không thể tải SignalR client. Vui lòng tải lại trang.", "error");
+        return;
+    }
+
     try {
         await connection.start();
         console.log("ChatHub connected.");
@@ -110,11 +141,132 @@ async function startConnection() {
 
 startConnection();
 
+initEmojiPicker();
+
 // ==================== Room Selection ====================
 
 function selectRoom(roomId) {
     // Navigate with full page reload so server loads messages + sets SelectedRoom
     window.location.href = `/Chat/${roomId}`;
+}
+
+function initEmojiPicker() {
+    const picker = document.getElementById("emojiPicker");
+    if (!picker) return;
+
+    const storedRecent = localStorage.getItem(recentEmojiStorageKey);
+    let parsedRecent = [];
+    if (storedRecent) {
+        try {
+            parsedRecent = JSON.parse(storedRecent).filter(x => typeof x === "string");
+        } catch {
+            parsedRecent = [];
+        }
+    }
+
+    const recentGroup = emojiGroups.find(x => x.key === "recent");
+    if (recentGroup) {
+        recentGroup.emojis = parsedRecent;
+    }
+
+    picker.innerHTML = `
+        <div class="emoji-picker-toolbar" id="emojiPickerToolbar"></div>
+        <div class="emoji-picker-content" id="emojiPickerContent"></div>`;
+
+    renderEmojiPickerTabs();
+    renderEmojiPickerContent();
+
+    document.addEventListener("click", function (event) {
+        const pickerEl = document.getElementById("emojiPicker");
+        const trigger = document.getElementById("btnEmoji");
+        if (!pickerEl || !trigger || pickerEl.style.display === "none") return;
+
+        if (!pickerEl.contains(event.target) && !trigger.contains(event.target)) {
+            pickerEl.style.display = "none";
+        }
+    });
+}
+
+function toggleEmojiPicker() {
+    const picker = document.getElementById("emojiPicker");
+    if (!picker) return;
+
+    const isHidden = picker.style.display === "none";
+    if (isHidden) {
+        picker.style.display = "block";
+        renderEmojiPickerTabs();
+        renderEmojiPickerContent();
+    } else {
+        picker.style.display = "none";
+    }
+}
+
+function appendEmoji(emoji) {
+    const input = document.getElementById("messageInput");
+    if (!input) return;
+
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+    input.value = `${input.value.slice(0, start)}${emoji}${input.value.slice(end)}`;
+
+    const caretPos = start + emoji.length;
+    input.focus();
+    input.setSelectionRange(caretPos, caretPos);
+
+    pushRecentEmoji(emoji);
+}
+
+function selectEmojiGroup(groupKey) {
+    activeEmojiGroupKey = groupKey;
+    renderEmojiPickerTabs();
+    renderEmojiPickerContent();
+}
+
+function renderEmojiPickerTabs() {
+    const toolbar = document.getElementById("emojiPickerToolbar");
+    if (!toolbar) return;
+
+    toolbar.innerHTML = emojiGroups
+        .map(group => `
+            <button type="button"
+                    class="emoji-picker-tab ${group.key === activeEmojiGroupKey ? "active" : ""}"
+                    title="${escapeHtml(group.title)}"
+                    onclick="selectEmojiGroup('${group.key}')">
+                <span class="emoji-picker-tab-icon">${group.icon}</span>
+                <span class="emoji-picker-tab-label">${escapeHtml(group.title)}</span>
+            </button>`)
+        .join("");
+}
+
+function renderEmojiPickerContent() {
+    const content = document.getElementById("emojiPickerContent");
+    if (!content) return;
+
+    const activeGroup = emojiGroups.find(x => x.key === activeEmojiGroupKey) ?? emojiGroups[0];
+    const emojis = activeGroup?.emojis ?? [];
+
+    if (emojis.length === 0) {
+        content.innerHTML = `<div class="emoji-picker-empty">Chưa có emoji gần đây.</div>`;
+        return;
+    }
+
+    content.innerHTML = `
+        <div class="emoji-picker-group-title">${escapeHtml(activeGroup.title)}</div>
+        <div class="emoji-grid">
+            ${emojis.map(emoji => `<button type="button" class="emoji-item" onclick="appendEmoji('${emoji}')">${emoji}</button>`).join("")}
+        </div>`;
+}
+
+function pushRecentEmoji(emoji) {
+    const recentGroup = emojiGroups.find(x => x.key === "recent");
+    if (!recentGroup) return;
+
+    recentGroup.emojis = [emoji, ...recentGroup.emojis.filter(x => x !== emoji)].slice(0, maxRecentEmojis);
+    localStorage.setItem(recentEmojiStorageKey, JSON.stringify(recentGroup.emojis));
+
+    if (activeEmojiGroupKey === "recent") {
+        renderEmojiPickerContent();
+    }
 }
 
 function showSidebar() {
@@ -136,16 +288,19 @@ async function handleSendMessage(e) {
 
     if (editingMessageId) {
         // Edit mode — no attachments in edit
-        connection.invoke("EditMessage", selectedRoomId, editingMessageId, content).catch(logError);
+        invokeHub("EditMessage", selectedRoomId, editingMessageId, content);
         cancelEdit();
     } else if (pendingAttachments.length > 0) {
         // Send with attachments
-        connection.invoke("SendMessageWithAttachments", selectedRoomId, content || null, pendingAttachments).catch(logError);
+        invokeHub("SendMessageWithAttachments", selectedRoomId, content || null, pendingAttachments);
         clearPendingAttachments();
     } else {
         // Plain text
-        connection.invoke("SendMessage", selectedRoomId, content).catch(logError);
+        invokeHub("SendMessage", selectedRoomId, content);
     }
+
+    const picker = document.getElementById("emojiPicker");
+    if (picker) picker.style.display = "none";
 
     return false;
 }
@@ -272,7 +427,7 @@ function cancelEdit() {
 
 function deleteMessage(messageId) {
     if (!confirm("Delete this message?")) return;
-    connection.invoke("DeleteMessage", selectedRoomId, messageId).catch(logError);
+    invokeHub("DeleteMessage", selectedRoomId, messageId);
 }
 
 // ==================== Load Older Messages (cursor paging) ====================
@@ -520,7 +675,7 @@ function searchUsers() {
 }
 
 function startDm(otherUserId) {
-    connection.invoke("CreateOrGetDmRoom", otherUserId).catch(logError);
+    invokeHub("CreateOrGetDmRoom", otherUserId);
 }
 
 // ==================== User Search (Group) ====================
@@ -588,7 +743,7 @@ function createGroupRoom() {
         return;
     }
     const memberIds = Array.from(selectedGroupMembers.keys());
-    connection.invoke("CreateGroupRoom", name, memberIds).catch(logError);
+    invokeHub("CreateGroupRoom", name, memberIds);
 }
 
 // ==================== Toast Notification ====================
@@ -617,16 +772,18 @@ function logError(err) {
 
 // Mark latest message as read on initial load
 (function markInitialRead() {
+    if (!connection) {
+        return;
+    }
+
     if (selectedRoomId > 0) {
         const msgs = document.querySelectorAll(".message-row[data-message-id]");
         if (msgs.length > 0) {
             const lastId = parseInt(msgs[msgs.length - 1].getAttribute("data-message-id"), 10);
             if (lastId) {
-                // Wait for connection to be ready
-                connection.start ? void 0 : null; // no-op guard
                 const tryMark = function () {
                     if (connection.state === "Connected") {
-                        connection.invoke("MarkRead", selectedRoomId, lastId).catch(logError);
+                        invokeHub("MarkRead", selectedRoomId, lastId);
                     } else {
                         setTimeout(tryMark, 500);
                     }

@@ -10,10 +10,14 @@
     <style>
         .app-content {
             padding: 0 !important;
+            min-height: calc(100dvh - var(--header-height, 70px));
+            display: flex;
         }
         .chat-container {
-            height: calc(100vh - var(--header-height)) !important;
-            max-height: calc(100vh - var(--header-height)) !important;
+            height: calc(100dvh - var(--header-height, 70px)) !important;
+            max-height: calc(100dvh - var(--header-height, 70px)) !important;
+            min-height: calc(100dvh - var(--header-height, 70px));
+            flex: 1;
             border-radius: 0;
         }
     </style>
@@ -204,12 +208,16 @@
                             <i class="fas fa-paperclip"></i>
                         </label>
                         <input type="file" id="fileInput" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.mp4,.mp3" style="display:none;" onchange="handleFileSelected(event)" />
+                        <button type="button" class="btn-emoji" id="btnEmoji" title="Emoji" onclick="toggleEmojiPicker()">
+                            <i class="far fa-smile"></i>
+                        </button>
                         <input type="text" id="messageInput" placeholder="Type a message..."
                                autocomplete="off" maxlength="2000" />
                         <button type="submit" class="btn-send" id="btnSend" title="Send">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
+                    <div class="emoji-picker" id="emojiPicker" style="display:none;"></div>
                 </form>
             </div>
         }
@@ -285,5 +293,5 @@
 <input type="hidden" id="selectedRoomId" value="@(Model.SelectedRoom?.RoomId ?? 0)" />
 <input type="hidden" id="currentUserRole" value="@(Model.SelectedRoom?.CurrentUserRole ?? "")" />
 
-<script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js" asp-append-version="true"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
 <script src="~/js/chat.js" asp-append-version="true"></script>

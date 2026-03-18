@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BusinessLogic.DTOs.GradeAppeals;
 using BusinessLogic.DTOs.Requests.Gradebook;
 using BusinessLogic.DTOs.Responses.Gradebook;
 using BusinessLogic.Services.Interfaces;
@@ -14,12 +15,14 @@ public class IndexModel : PageModel
 {
     private readonly IGradebookService _gradebookService;
     private readonly IGradeBookExportService _gradeBookExportService;
+    private readonly IGradeAppealService _gradeAppealService;
     private readonly ILogger<IndexModel> _logger;
 
-    public IndexModel(IGradebookService gradebookService, IGradeBookExportService gradeBookExportService, ILogger<IndexModel> logger)
+    public IndexModel(IGradebookService gradebookService, IGradeBookExportService gradeBookExportService, IGradeAppealService gradeAppealService, ILogger<IndexModel> logger)
     {
         _gradebookService = gradebookService;
         _gradeBookExportService = gradeBookExportService;
+        _gradeAppealService = gradeAppealService;
         _logger = logger;
     }
 
@@ -39,6 +42,8 @@ public class IndexModel : PageModel
     public decimal? PrefillNewScore { get; set; }
 
     public GradebookDetailResponse? Gradebook { get; set; }
+    public List<AppealFocusGradeItemViewModel> AppealFocusGradeItems { get; set; } = [];
+    public HashSet<int> AppealFocusGradeItemIds => AppealFocusGradeItems.Select(x => x.GradeItemId).ToHashSet();
 
     public IReadOnlyList<EnrollmentRow> EnrollmentRows { get; set; } = [];
 
@@ -69,6 +74,7 @@ public class IndexModel : PageModel
         }
 
         await LoadGradebookAsync(userId);
+        await LoadAppealFocusContextAsync(userId);
         return Page();
     }
 
@@ -159,6 +165,100 @@ public class IndexModel : PageModel
         }
     }
 
+    private async Task LoadAppealFocusContextAsync(int userId)
+    {
+        AppealFocusGradeItems = [];
+        if (!AppealId.HasValue || !HighlightEnrollmentId.HasValue || Gradebook is null)
+        {
+            return;
+        }
+
+        var appealResult = await _gradeAppealService.GetDetailAsync(userId, AppealId.Value);
+        if (!appealResult.IsSuccess || appealResult.Data is null)
+        {
+            return;
+        }
+
+        var appeal = appealResult.Data;
+        if (appeal.ClassSectionId != ClassSectionId || appeal.EnrollmentId != HighlightEnrollmentId.Value)
+        {
+            return;
+        }
+
+        var entryByGradeItemId = Gradebook.GradeEntries
+            .Where(x => x.EnrollmentId == HighlightEnrollmentId.Value)
+            .ToDictionary(x => x.GradeItemId, x => x.Score);
+
+        IEnumerable<GradeItemResponse> targetItems;
+        if (appeal.GradeItemId.HasValue)
+        {
+            targetItems = Gradebook.GradeItems.Where(x => x.GradeItemId == appeal.GradeItemId.Value);
+        }
+        else
+        {
+            var appealedItemNames = ParseAppealedItemNames(appeal.EvidenceNote);
+            targetItems = appealedItemNames.Count == 0
+                ? Gradebook.GradeItems
+                : Gradebook.GradeItems.Where(x => appealedItemNames.Contains(x.ItemName));
+        }
+
+        AppealFocusGradeItems = targetItems
+            .OrderBy(x => x.SortOrder)
+            .Select(x => new AppealFocusGradeItemViewModel
+            {
+                GradeItemId = x.GradeItemId,
+                ItemName = x.ItemName,
+                CurrentScore = entryByGradeItemId.TryGetValue(x.GradeItemId, out var score) ? score : null,
+                MaxScore = x.MaxScore,
+                PrefillNewScore = PrefillNewScore
+            })
+            .ToList();
+
+        if (AppealFocusGradeItems.Count == 1)
+        {
+            HighlightGradeItemId = AppealFocusGradeItems[0].GradeItemId;
+        }
+    }
+
+    private static HashSet<string> ParseAppealedItemNames(string? evidenceNote)
+    {
+        if (string.IsNullOrWhiteSpace(evidenceNote))
+        {
+            return [];
+        }
+
+        const string prefix = "Grade items khiếu nại:";
+        var lines = evidenceNote
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        var targetLine = lines.FirstOrDefault(x => x.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+        if (string.IsNullOrWhiteSpace(targetLine))
+        {
+            return [];
+        }
+
+        var rawItems = targetLine[prefix.Length..]
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var rawItem in rawItems)
+        {
+            var itemName = rawItem;
+            var scoreHintIndex = rawItem.IndexOf('(');
+            if (scoreHintIndex >= 0)
+            {
+                itemName = rawItem[..scoreHintIndex].Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(itemName))
+            {
+                result.Add(itemName);
+            }
+        }
+
+        return result;
+    }
+
     private void BuildEnrollmentRows()
     {
         if (Gradebook is null) return;
@@ -211,5 +311,14 @@ public class IndexModel : PageModel
         public string StudentCode { get; set; } = string.Empty;
         public string StudentName { get; set; } = string.Empty;
         public Dictionary<int, decimal?> Scores { get; set; } = new();
+    }
+
+    public sealed class AppealFocusGradeItemViewModel
+    {
+        public int GradeItemId { get; set; }
+        public string ItemName { get; set; } = string.Empty;
+        public decimal? CurrentScore { get; set; }
+        public decimal MaxScore { get; set; }
+        public decimal? PrefillNewScore { get; set; }
     }
 }

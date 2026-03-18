@@ -17,8 +17,8 @@ public sealed class EnrollmentService : IEnrollmentService
     private static readonly string[] ActiveDuplicateStatuses =
     {
         EnrollmentStatus.ENROLLED.ToString(),
-        EnrollmentStatus.WITHDRAWN.ToString(),
-        EnrollmentStatus.PENDING_APPROVAL.ToString()
+        EnrollmentStatus.PENDING_APPROVAL.ToString(),
+        EnrollmentStatus.WAITLIST.ToString()
     };
 
     private static readonly string[] ActiveScheduleStatuses =
@@ -221,7 +221,7 @@ public sealed class EnrollmentService : IEnrollmentService
             {
                 WalletId = wallet.WalletId,
                 Amount = -feeAmount,
-                TransactionType = "TUITION_PAYMENT",
+                TransactionType = "CHECKOUT_PAYMENT",
                 Description = "Thanh toán học phí đăng ký học phần",
                 CreatedAt = DateTime.UtcNow
             };
@@ -234,6 +234,18 @@ public sealed class EnrollmentService : IEnrollmentService
 
             _logger.LogInformation("RegisterAndPayAsync SUCCESS — EnrollmentId={EnrollmentId}, StudentId={StudentId}, ClassSectionId={ClassSectionId}", enrollment.EnrollmentId, student.StudentId, classSectionId);
             return ServiceResult<EnrollmentResponse>.Success(MapEnrollmentResponse(enrollment, feeAmount, wallet.Balance, "Đăng ký thành công, chờ phê duyệt."));
+        }
+        catch (DbUpdateException ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "RegisterAndPayAsync DB EXCEPTION — UserId={UserId}, ClassSectionId={ClassSectionId}", userId, classSectionId);
+
+            if (ex.InnerException?.Message.Contains("UX_Enrollments_Student_Course_Sem_Active", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                return ServiceResult<EnrollmentResponse>.Fail("DUPLICATE_ENROLLMENT", "Bạn đã có đăng ký đang hoạt động cho môn học này trong học kỳ.");
+            }
+
+            return ServiceResult<EnrollmentResponse>.Fail("SYSTEM_ERROR", "Có lỗi hệ thống, vui lòng thử lại.");
         }
         catch (Exception ex)
         {

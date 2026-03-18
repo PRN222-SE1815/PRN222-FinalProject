@@ -254,12 +254,9 @@ public sealed class GradeAppealService : IGradeAppealService
                 return ServiceResult<BlGradeAppealDetailDto>.Fail("INVALID_STATUS", "Only UNDER_REVIEW appeals can be resolved.");
             }
 
-            if (string.Equals(outcome, GradeAppealStatus.Rejected, StringComparison.Ordinal)
-                && (request.GradeEntryId.HasValue || request.NewScore.HasValue))
-            {
-                await transaction.RollbackAsync(ct);
-                return ServiceResult<BlGradeAppealDetailDto>.Fail("INVALID_SCORE_CHANGE", "Score change is allowed only for approved appeals.");
-            }
+            var scoreChanges = request.ScoreChanges
+                .Where(x => x.GradeEntryId > 0)
+                .ToList();
 
             if (request.GradeEntryId.HasValue || request.NewScore.HasValue)
             {
@@ -269,35 +266,68 @@ public sealed class GradeAppealService : IGradeAppealService
                     return ServiceResult<BlGradeAppealDetailDto>.Fail("INVALID_SCORE_CHANGE", "Both GradeEntryId and NewScore are required for score change.");
                 }
 
-                var gradeEntry = await _gradeAppealRepository.GetGradeEntryByIdAsync(request.GradeEntryId.Value, ct);
-                if (gradeEntry == null)
+                scoreChanges.Add(new ResolveGradeAppealScoreChangeRequest
+                {
+                    GradeEntryId = request.GradeEntryId.Value,
+                    NewScore = request.NewScore.Value
+                });
+            }
+
+            var hasScoreChange = scoreChanges.Count > 0;
+            if (string.Equals(outcome, GradeAppealStatus.Rejected, StringComparison.Ordinal) && hasScoreChange)
+            {
+                await transaction.RollbackAsync(ct);
+                return ServiceResult<BlGradeAppealDetailDto>.Fail("INVALID_SCORE_CHANGE", "Score change is allowed only for approved appeals.");
+            }
+
+            if (hasScoreChange)
+            {
+                var duplicateGradeEntryId = scoreChanges
+                    .GroupBy(x => x.GradeEntryId)
+                    .Where(x => x.Count() > 1)
+                    .Select(x => x.Key)
+                    .FirstOrDefault();
+
+                if (duplicateGradeEntryId > 0)
                 {
                     await transaction.RollbackAsync(ct);
-                    return ServiceResult<BlGradeAppealDetailDto>.Fail("GRADE_ENTRY_NOT_FOUND", "Grade entry not found.");
+                    return ServiceResult<BlGradeAppealDetailDto>.Fail("INVALID_SCORE_CHANGE", "Duplicate grade entry updates are not allowed.");
                 }
 
-                if (gradeEntry.EnrollmentId != appeal.EnrollmentId || gradeEntry.GradeItem.GradeBookId != appeal.GradeBookId)
+                foreach (var scoreChange in scoreChanges)
                 {
-                    await transaction.RollbackAsync(ct);
-                    return ServiceResult<BlGradeAppealDetailDto>.Fail("GRADE_ENTRY_MISMATCH", "Grade entry does not belong to this appeal context.");
-                }
+                    var gradeEntry = await _gradeAppealRepository.GetGradeEntryByIdAsync(scoreChange.GradeEntryId, ct);
+                    if (gradeEntry == null)
+                    {
+                        await transaction.RollbackAsync(ct);
+                        return ServiceResult<BlGradeAppealDetailDto>.Fail("GRADE_ENTRY_NOT_FOUND", "Grade entry not found.");
+                    }
 
-                if (appeal.GradeItemId.HasValue && gradeEntry.GradeItemId != appeal.GradeItemId.Value)
-                {
-                    await transaction.RollbackAsync(ct);
-                    return ServiceResult<BlGradeAppealDetailDto>.Fail("GRADE_ENTRY_MISMATCH", "Grade entry item does not match the appealed grade item.");
-                }
+                    if (gradeEntry.EnrollmentId != appeal.EnrollmentId || gradeEntry.GradeItem.GradeBookId != appeal.GradeBookId)
+                    {
+                        await transaction.RollbackAsync(ct);
+                        return ServiceResult<BlGradeAppealDetailDto>.Fail("GRADE_ENTRY_MISMATCH", "Grade entry does not belong to this appeal context.");
+                    }
 
-                if (request.NewScore.Value < 0 || request.NewScore.Value > gradeEntry.GradeItem.MaxScore)
-                {
-                    await transaction.RollbackAsync(ct);
-                    return ServiceResult<BlGradeAppealDetailDto>.Fail("INVALID_SCORE", "New score is out of valid range.");
-                }
+                    if (appeal.GradeItemId.HasValue && gradeEntry.GradeItemId != appeal.GradeItemId.Value)
+                    {
+                        await transaction.RollbackAsync(ct);
+                        return ServiceResult<BlGradeAppealDetailDto>.Fail("GRADE_ENTRY_MISMATCH", "Grade entry item does not match the appealed grade item.");
+                    }
 
-                var oldScore = gradeEntry.Score;
-                if (oldScore != request.NewScore.Value)
-                {
-                    gradeEntry.Score = request.NewScore.Value;
+                    if (scoreChange.NewScore < 0 || scoreChange.NewScore > gradeEntry.GradeItem.MaxScore)
+                    {
+                        await transaction.RollbackAsync(ct);
+                        return ServiceResult<BlGradeAppealDetailDto>.Fail("INVALID_SCORE", "New score is out of valid range.");
+                    }
+
+                    var oldScore = gradeEntry.Score;
+                    if (oldScore == scoreChange.NewScore)
+                    {
+                        continue;
+                    }
+
+                    gradeEntry.Score = scoreChange.NewScore;
                     gradeEntry.UpdatedBy = reviewerUserId;
                     gradeEntry.UpdatedAt = DateTime.UtcNow;
 
@@ -306,13 +336,19 @@ public sealed class GradeAppealService : IGradeAppealService
                         GradeEntryId = gradeEntry.GradeEntryId,
                         ActorUserId = reviewerUserId,
                         OldScore = oldScore,
-                        NewScore = request.NewScore.Value,
+                        NewScore = scoreChange.NewScore,
                         Reason = responseMessage,
                         CreatedAt = DateTime.UtcNow
                     };
 
                     await _gradeBookRepository.AddGradeAuditLogAsync(auditLog, ct);
                 }
+            }
+
+            if (!hasScoreChange)
+            {
+                request.GradeEntryId = null;
+                request.NewScore = null;
             }
 
             appeal.Status = outcome;

@@ -183,9 +183,7 @@ public sealed class AIChatService : IAIChatService
 
             if (request.UseTools)
             {
-                var toolSchemas = _aiToolService.GetSupportedToolNames()
-                    .Select(name => JsonSerializer.Serialize(new { name }))
-                    .ToList();
+                var toolSchemas = BuildToolSchemas(_aiToolService.GetSupportedToolNames());
 
                 var workingHistory = historyMessages.ToList();
                 var toolCallCount = 0;
@@ -567,7 +565,8 @@ public sealed class AIChatService : IAIChatService
             "- Only draw conclusions from tool results. Never fabricate data.\n" +
             "- If data is missing or insufficient, clearly state what is unavailable.\n" +
             "- Do not reveal internal tool names or system architecture to the user.\n" +
-            "- Always respond in a helpful, concise academic advising tone.";
+            "- Always respond in a helpful, concise academic advising tone.\n" +
+            "- When user asks for a specific semester (e.g., 'SU26'), pass it via tool argument 'semesterCode'.";
 
         var basePrompt = purpose.ToUpperInvariant() switch
         {
@@ -582,6 +581,36 @@ public sealed class AIChatService : IAIChatService
         };
 
         return basePrompt + grounding;
+    }
+
+    private static List<string> BuildToolSchemas(IReadOnlyList<string> toolNames)
+    {
+        return toolNames
+            .Select(name => name switch
+            {
+                "get_course_catalog" => JsonSerializer.Serialize(new
+                {
+                    name,
+                    arguments = new
+                    {
+                        semesterId = "int (optional)",
+                        semesterCode = "string like 'SU26' (optional)",
+                        programId = "int (optional)"
+                    }
+                }),
+                "simulate_plan" => JsonSerializer.Serialize(new
+                {
+                    name,
+                    arguments = new
+                    {
+                        semesterId = "int (optional)",
+                        semesterCode = "string like 'SU26' (optional)",
+                        candidateCourseIds = "int[] (required)"
+                    }
+                }),
+                _ => JsonSerializer.Serialize(new { name })
+            })
+            .ToList();
     }
 
     private static AIChatSessionResponse MapSession(AIChatSession session)
