@@ -10,6 +10,8 @@ public static class ErrorCodes
     public const string InvalidState = "INVALID_STATE";
     public const string ItemNotFound = "ITEM_NOT_FOUND";
     public const string InternalError = "INTERNAL_ERROR";
+    public const string SystemError = "SYSTEM_ERROR";
+    public const string ExportRowLimitExceeded = "EXPORT_ROW_LIMIT_EXCEEDED";
 
     // AI module
     public const string SessionNotFound = "SESSION_NOT_FOUND";

@@ -44,7 +44,7 @@ public sealed class PaymentService : IPaymentService
         _logger = logger;
     }
 
-    public async Task<ServiceResult<MoMoCreatePaymentResponse>> CreateDepositAsync(int userId, decimal amount)
+    public async Task<ServiceResult<MoMoCreatePaymentResponse>> CreateDepositAsync(int userId, decimal amount, string? returnUrl = null, string? notifyUrl = null)
     {
         _logger.LogInformation("CreateDepositAsync started — UserId={UserId}", userId);
 
@@ -66,15 +66,23 @@ public sealed class PaymentService : IPaymentService
         var orderInfo = $"Nạp ví sinh viên {student.StudentCode}";
         var momoAmount = (long)amount;
         var extraData = string.Empty;
+        var effectiveReturnUrl = string.IsNullOrWhiteSpace(returnUrl) ? _momoSettings.ReturnUrl : returnUrl;
+        var effectiveNotifyUrl = string.IsNullOrWhiteSpace(notifyUrl) ? _momoSettings.NotifyUrl : notifyUrl;
+
+        if (string.IsNullOrWhiteSpace(effectiveReturnUrl) || string.IsNullOrWhiteSpace(effectiveNotifyUrl))
+        {
+            _logger.LogError("CreateDepositAsync callback URLs are not configured. ReturnUrl={ReturnUrl}, NotifyUrl={NotifyUrl}", effectiveReturnUrl, effectiveNotifyUrl);
+            return ServiceResult<MoMoCreatePaymentResponse>.Fail("INVALID_CALLBACK_URL", "Thiếu cấu hình callback URL cho MoMo.");
+        }
 
         var rawSignature = $"accessKey={_momoSettings.AccessKey}" +
                            $"&amount={momoAmount}" +
                            $"&extraData={extraData}" +
-                           $"&ipnUrl={_momoSettings.NotifyUrl}" +
+                           $"&ipnUrl={effectiveNotifyUrl}" +
                            $"&orderId={orderId}" +
                            $"&orderInfo={orderInfo}" +
                            $"&partnerCode={_momoSettings.PartnerCode}" +
-                           $"&redirectUrl={_momoSettings.ReturnUrl}" +
+                           $"&redirectUrl={effectiveReturnUrl}" +
                            $"&requestId={requestId}" +
                            $"&requestType={_momoSettings.RequestType}";
 
@@ -87,8 +95,8 @@ public sealed class PaymentService : IPaymentService
             amount = momoAmount,
             orderId,
             orderInfo,
-            redirectUrl = _momoSettings.ReturnUrl,
-            ipnUrl = _momoSettings.NotifyUrl,
+            redirectUrl = effectiveReturnUrl,
+            ipnUrl = effectiveNotifyUrl,
             requestType = _momoSettings.RequestType,
             extraData,
             lang = "vi",
