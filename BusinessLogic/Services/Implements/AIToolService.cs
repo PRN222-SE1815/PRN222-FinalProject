@@ -1,5 +1,5 @@
 using System.Text.Json;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.Services.Interfaces;
 using BusinessObject.Enum;
 using DataAccess.Repositories.Interfaces;

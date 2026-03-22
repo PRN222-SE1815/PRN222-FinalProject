@@ -1,4 +1,4 @@
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.Services.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Presentation.Hubs;

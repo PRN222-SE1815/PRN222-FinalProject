@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace BusinessLogic.DTOs.Request;
+namespace BusinessLogic.DTOs.Requests;
 
 public sealed class MoMoCallbackRequest
 {

@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.Services.Interfaces;
 using BusinessObject.Enum;
 using Microsoft.AspNetCore.Authorization;

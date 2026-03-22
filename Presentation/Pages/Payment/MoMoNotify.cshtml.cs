@@ -1,4 +1,4 @@
-using BusinessLogic.DTOs.Request;
+using BusinessLogic.DTOs.Requests;
 using BusinessLogic.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

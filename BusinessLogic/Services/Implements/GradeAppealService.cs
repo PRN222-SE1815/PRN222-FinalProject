@@ -1,7 +1,7 @@
 using System.Data;
-using BusinessLogic.DTOs.GradeAppeals;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Requests.GradeAppeals;
 using BusinessLogic.DTOs.Responses;
+using BusinessLogic.DTOs.Responses.GradeAppeals;
 using BusinessLogic.Services.Interfaces;
 using BusinessObject.Entities;
 using BusinessObject.Enum;
@@ -10,10 +10,10 @@ using DataAccess.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using BlGradeAppealDetailDto = BusinessLogic.DTOs.GradeAppeals.GradeAppealDetailDto;
-using BlGradeAppealListItemDto = BusinessLogic.DTOs.GradeAppeals.GradeAppealListItemDto;
-using BlGradeAppealQueryRequest = BusinessLogic.DTOs.GradeAppeals.GradeAppealQueryRequest;
-using BlPagedResult = BusinessLogic.DTOs.Response.PagedResult<BusinessLogic.DTOs.GradeAppeals.GradeAppealListItemDto>;
+using BlGradeAppealDetailDto = BusinessLogic.DTOs.Responses.GradeAppeals.GradeAppealDetailDto;
+using BlGradeAppealListItemDto = BusinessLogic.DTOs.Responses.GradeAppeals.GradeAppealListItemDto;
+using BlGradeAppealQueryRequest = BusinessLogic.DTOs.Requests.GradeAppeals.GradeAppealQueryRequest;
+using BlPagedResult = BusinessLogic.DTOs.Responses.PagedResult<BusinessLogic.DTOs.Responses.GradeAppeals.GradeAppealListItemDto>;
 using GradeAppealDetailRow = DataAccess.Repositories.Models.GradeAppealDetailDto;
 using GradeAppealListItemRow = DataAccess.Repositories.Models.GradeAppealListItemDto;
 

@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.DTOs.Responses.AI;
 using BusinessLogic.Services.Interfaces;
 using BusinessLogic.Settings;

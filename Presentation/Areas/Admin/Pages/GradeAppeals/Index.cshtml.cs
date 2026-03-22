@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using BusinessLogic.DTOs.GradeAppeals;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Requests.GradeAppeals;
 using BusinessLogic.DTOs.Responses;
+using BusinessLogic.DTOs.Responses.GradeAppeals;
 using BusinessLogic.Services.Interfaces;
 using BusinessObject.Enum;
 using Microsoft.AspNetCore.Authorization;

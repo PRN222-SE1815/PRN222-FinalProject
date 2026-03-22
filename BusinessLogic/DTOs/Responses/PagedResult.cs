@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace BusinessLogic.DTOs.Response;
+namespace BusinessLogic.DTOs.Responses;
 
 public sealed class PagedResult<T>
 {

@@ -1,5 +1,5 @@
 using System.Data;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.Services.Interfaces;
 using BusinessObject.Entities;
 using BusinessObject.Enum;

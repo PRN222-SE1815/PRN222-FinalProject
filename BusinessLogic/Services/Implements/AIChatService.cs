@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using BusinessLogic.DTOs.Requests.AI;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.DTOs.Responses.AI;
 using BusinessLogic.Services.Interfaces;
 using BusinessLogic.Settings;

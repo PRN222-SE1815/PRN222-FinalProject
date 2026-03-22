@@ -1,6 +1,6 @@
 using BusinessObject.Enum;
 
-namespace BusinessLogic.DTOs.Request;
+namespace BusinessLogic.DTOs.Requests;
 
 public sealed class GetStudentCalendarRequest
 {

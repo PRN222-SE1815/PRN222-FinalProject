@@ -1,5 +1,5 @@
-﻿using BusinessLogic.DTOs.Requests.Chat;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Requests.Chat;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.DTOs.Responses.Chat;
 
 namespace BusinessLogic.Services.Interfaces;
@@ -46,8 +46,8 @@ public interface IChatService
 
     /// <summary>
     /// Ensure a student is a member of the CLASS chat room for a class section.
-    /// If room exists and student not yet member → JOINED.
-    /// If status is READ_ONLY or REMOVED → set to JOINED.
+    /// If room exists and student not yet member ? JOINED.
+    /// If status is READ_ONLY or REMOVED ? set to JOINED.
     /// </summary>
     Task<OperationResult> EnsureClassChatMembershipAsync(int classSectionId, int studentId);
 }

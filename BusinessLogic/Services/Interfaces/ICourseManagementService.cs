@@ -1,5 +1,5 @@
 using BusinessLogic.DTOs.Requests.CourseManagement;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.DTOs.Responses.CourseManagement;
 
 namespace BusinessLogic.Services.Interfaces;

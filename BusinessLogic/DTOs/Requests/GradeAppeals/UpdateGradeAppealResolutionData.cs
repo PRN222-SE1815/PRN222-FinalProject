@@ -1,4 +1,4 @@
-namespace BusinessLogic.DTOs.GradeAppeals;
+namespace BusinessLogic.DTOs.Requests.GradeAppeals;
 
 public sealed class UpdateGradeAppealResolutionData
 {

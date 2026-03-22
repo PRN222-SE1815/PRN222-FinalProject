@@ -1,7 +1,7 @@
 using System.Data;
 using BusinessLogic.Constants;
 using BusinessLogic.DTOs.Requests.CourseManagement;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.DTOs.Responses.CourseManagement;
 using BusinessLogic.Services.Interfaces;
 using BusinessObject.Entities;

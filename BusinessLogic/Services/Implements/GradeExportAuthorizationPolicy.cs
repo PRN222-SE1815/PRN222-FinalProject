@@ -1,5 +1,5 @@
 using BusinessLogic.Constants;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.Services.Interfaces;
 
 namespace BusinessLogic.Services.Implements;

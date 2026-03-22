@@ -1,5 +1,5 @@
-﻿using System.Security.Claims;
-using BusinessLogic.DTOs.Response;
+using System.Security.Claims;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.DTOs.Responses.Chat;
 using BusinessLogic.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;

@@ -1,6 +1,6 @@
 using System.Security.Claims;
-using BusinessLogic.DTOs.GradeAppeals;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Requests.GradeAppeals;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.DTOs.Responses.Gradebook;
 using BusinessLogic.Services.Interfaces;
 using BusinessObject.Enum;

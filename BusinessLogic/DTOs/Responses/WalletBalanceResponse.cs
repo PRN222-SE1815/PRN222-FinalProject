@@ -1,4 +1,4 @@
-namespace BusinessLogic.DTOs.Response;
+namespace BusinessLogic.DTOs.Responses;
 
 public sealed class WalletBalanceResponse
 {

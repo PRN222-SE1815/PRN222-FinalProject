@@ -1,5 +1,5 @@
-﻿﻿using BusinessLogic.DTOs.Requests.Chat;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Requests.Chat;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.DTOs.Responses.Chat;
 using BusinessLogic.Services.Interfaces;
 using BusinessObject.Entities;
@@ -15,11 +15,9 @@ public sealed class ChatService : IChatService
     private const int DefaultPageSize = 20;
     private const int MaxUserSearchLimit = 20;
 
-    // BANNED/REMOVED → no read access
     private static readonly HashSet<string> ReadBlockedStatuses = new(StringComparer.OrdinalIgnoreCase)
         { "BANNED", "REMOVED" };
 
-    // BANNED/REMOVED/READ_ONLY/MUTED → no send access
     private static readonly HashSet<string> SendBlockedStatuses = new(StringComparer.OrdinalIgnoreCase)
         { "BANNED", "REMOVED", "READ_ONLY", "MUTED" };
 
@@ -173,7 +171,7 @@ public sealed class ChatService : IChatService
         if (IsReadBlocked(membership))
             return OperationResult.Fail("You cannot access this room.", "FORBIDDEN");
 
-        // MUTED user → log moderation event before rejecting
+        // MUTED user ? log moderation event before rejecting
         if (IsSendBlocked(membership))
         {
             if (membership.MemberStatus.Equals("MUTED", StringComparison.OrdinalIgnoreCase))
@@ -191,7 +189,7 @@ public sealed class ChatService : IChatService
             return OperationResult.Fail("You are not allowed to send messages in this room.", "FORBIDDEN");
         }
 
-        // LOCKED room → only OWNER/MODERATOR may send
+        // LOCKED room ? only OWNER/MODERATOR may send
         if (room.Status.Equals("LOCKED", StringComparison.OrdinalIgnoreCase))
         {
             if (!IsOwnerOrModerator(membership))
@@ -308,7 +306,7 @@ public sealed class ChatService : IChatService
 
         room = await _roomRepo.CreateRoomAsync(room);
 
-        // Creator → OWNER; others → MEMBER
+        // Creator ? OWNER; others ? MEMBER
         await _memberRepo.UpsertMembershipAsync(room.RoomId, creatorUserId, "OWNER", "JOINED");
 
         if (memberUserIds is not null)

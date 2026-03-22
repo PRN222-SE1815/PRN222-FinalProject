@@ -1,4 +1,4 @@
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Repositories.Interfaces;
 

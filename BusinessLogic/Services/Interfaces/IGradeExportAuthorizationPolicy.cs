@@ -1,4 +1,4 @@
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 
 namespace BusinessLogic.Services.Interfaces;
 

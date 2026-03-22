@@ -1,6 +1,6 @@
 using BusinessLogic.Constants;
 using BusinessLogic.DTOs.Requests.Gradebook;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.DTOs.Responses.Gradebook;
 using BusinessLogic.Services.Interfaces;
 using BusinessObject.Entities;

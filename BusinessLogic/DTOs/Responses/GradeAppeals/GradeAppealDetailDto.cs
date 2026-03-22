@@ -1,6 +1,6 @@
-namespace BusinessLogic.DTOs.GradeAppeals;
+namespace BusinessLogic.DTOs.Responses.GradeAppeals;
 
-public sealed class GradeAppealListItemDto
+public sealed class GradeAppealDetailDto
 {
     public long AppealId { get; set; }
     public int GradeBookId { get; set; }
@@ -11,18 +11,18 @@ public sealed class GradeAppealListItemDto
     public string AppealContent { get; set; } = string.Empty;
     public string? EvidenceNote { get; set; }
     public string Status { get; set; } = string.Empty;
+    public string? ResponseMessage { get; set; }
+    public int? ResolvedBy { get; set; }
     public DateTime SubmittedAt { get; set; }
     public DateTime? ResolvedAt { get; set; }
-    public int? ResolvedBy { get; set; }
-    public string? ResponseMessage { get; set; }
     public string? StudentCode { get; set; }
     public string? StudentFullName { get; set; }
     public string? GradeBookStatus { get; set; }
     public string? ClassSectionCode { get; set; }
     public string? CourseCode { get; set; }
     public string? CourseName { get; set; }
-    public int? SemesterId { get; set; }
-    public string? SemesterCode { get; set; }
-    public string? SemesterName { get; set; }
+    public string? GradeItemName { get; set; }
+    public decimal? GradeItemScore { get; set; }
+    public decimal? GradeItemMaxScore { get; set; }
     public string? ResolvedByFullName { get; set; }
 }

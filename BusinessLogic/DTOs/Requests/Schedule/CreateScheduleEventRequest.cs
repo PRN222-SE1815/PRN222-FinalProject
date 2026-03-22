@@ -1,8 +1,8 @@
-namespace BusinessLogic.DTOs.Request;
+namespace BusinessLogic.DTOs.Requests;
 
-public sealed class UpdateScheduleEventRequest
+public sealed class CreateScheduleEventRequest
 {
-    public long ScheduleEventId { get; set; }
+    public int ClassSectionId { get; set; }
     public string Title { get; set; } = string.Empty;
     public DateTime StartAtUtc { get; set; }
     public DateTime EndAtUtc { get; set; }
@@ -11,5 +11,6 @@ public sealed class UpdateScheduleEventRequest
     public string? OnlineUrl { get; set; }
     public int? TeacherId { get; set; }
     public int? RecurrenceId { get; set; }
+    public string InitialStatus { get; set; } = "DRAFT";
     public string? Reason { get; set; }
 }

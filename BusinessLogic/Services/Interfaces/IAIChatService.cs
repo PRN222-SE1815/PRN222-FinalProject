@@ -1,5 +1,5 @@
 using BusinessLogic.DTOs.Requests.AI;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.DTOs.Responses.AI;
 
 namespace BusinessLogic.Services.Interfaces;

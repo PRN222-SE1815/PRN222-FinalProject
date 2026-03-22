@@ -1,5 +1,5 @@
 using BusinessLogic.DTOs.Requests.Transactions;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.DTOs.Responses.Transactions;
 
 namespace BusinessLogic.Services.Interfaces;

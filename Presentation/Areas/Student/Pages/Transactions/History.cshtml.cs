@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using BusinessLogic.DTOs.Requests.Transactions;
-using BusinessLogic.DTOs.Response;
+using BusinessLogic.DTOs.Responses;
 using BusinessLogic.DTOs.Responses.Transactions;
 using BusinessLogic.Services.Interfaces;
 using BusinessObject.Enum;
