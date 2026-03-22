@@ -18,8 +18,20 @@ body {
 
 .layout-wrapper {
     display: flex;
-    flex-direction: column;
     min-height: 100vh;
+}
+
+.layout-content {
+    flex: 1;
+    margin-left: 250px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    transition: margin-left 0.25s ease;
+}
+
+body.sidebar-collapsed .layout-content {
+    margin-left: 72px;
 }
 
 .main-content {
@@ -40,6 +52,11 @@ body.no-footer .layout-wrapper {
     overflow: hidden;
 }
 
+body.no-footer .layout-content {
+    height: 100vh;
+    overflow: hidden;
+}
+
 body.no-footer .main-content {
     flex: 1;
     display: flex;
@@ -49,6 +66,14 @@ body.no-footer .main-content {
 }
 
 @media (max-width: 768px) {
+    .layout-content {
+        margin-left: 0;
+    }
+
+    body.sidebar-collapsed .layout-content {
+        margin-left: 0;
+    }
+
     .main-content {
         padding: 16px;
     }

@@ -11,21 +11,35 @@
     <title>@ViewBag.Title - TPF University Student</title>
     <link rel="stylesheet" href="~/css/Shared/Layout/_LayoutStudent.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Shared/Navbar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Shared/Sidebar.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Shared/Footer.css" asp-append-version="true" />
     @RenderSection("Styles", required: false)
 </head>
 <body data-role="@userRole" class="@(hideFooter ? "no-footer" : "")">
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                    document.body.classList.add('sidebar-collapsed');
+                }
+            } catch (e) { }
+        })();
+    </script>
     <div class="layout-wrapper">
-        @await Html.PartialAsync("Navbar")
+        @await Html.PartialAsync("Sidebar")
 
-        <main class="main-content">
-            @RenderBody()
-        </main>
+        <div class="layout-content">
+            @await Html.PartialAsync("Navbar")
 
-        @if (!hideFooter)
-        {
-            @await Html.PartialAsync("Footer")
-        }
+            <main class="main-content">
+                @RenderBody()
+            </main>
+
+            @if (!hideFooter)
+            {
+                @await Html.PartialAsync("Footer")
+            }
+        </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

@@ -335,7 +335,22 @@
         renderNotifications([]);
     };
 
+    function initializeSidebarToggle() {
+        var toggleButton = document.getElementById('sidebarToggle');
+        if (!toggleButton) {
+            return;
+        }
+
+        toggleButton.addEventListener('click', function () {
+            var isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+            try {
+                localStorage.setItem('sidebarCollapsed', isCollapsed ? 'true' : 'false');
+            } catch (e) { }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initializeNotifications();
+        initializeSidebarToggle();
     });
 })();
