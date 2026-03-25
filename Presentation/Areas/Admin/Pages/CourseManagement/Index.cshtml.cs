@@ -48,6 +48,12 @@ public class IndexModel : PageModel
     [BindProperty]
     public DeactivateCourseRequest DeactivateRequest { get; set; } = new();
 
+    [BindProperty]
+    public UpdateClassSectionRequest UpdateSectionRequest { get; set; } = new();
+
+    [BindProperty]
+    public DeleteClassSectionRequest DeleteSectionRequest { get; set; } = new();
+
     public PagedResultDto? CoursePage { get; set; }
 
     public CourseDetailResponse? EditCourse { get; set; }
@@ -114,6 +120,83 @@ public class IndexModel : PageModel
         }
 
         return Page();
+    }
+
+    public async Task<IActionResult> OnGetSectionDetailAsync(int classSectionId)
+    {
+        var userId = GetUserId();
+        if (userId == 0) return new JsonResult(new { success = false, message = "Unauthorized" });
+
+        try
+        {
+            var result = await _courseManagementService.GetClassSectionDetailAsync(userId, nameof(UserRole.ADMIN), classSectionId);
+
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return new JsonResult(new { success = true, data = result.Data });
+            }
+
+            return new JsonResult(new { success = false, message = result.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "OnGetSectionDetailAsync error. ClassSectionId={ClassSectionId}", classSectionId);
+            return new JsonResult(new { success = false, message = "Failed to load class section detail." });
+        }
+    }
+
+    public async Task<IActionResult> OnPostUpdateSectionAsync()
+    {
+        var userId = GetUserId();
+        if (userId == 0) return RedirectToPage("/Account/Login");
+
+        try
+        {
+            var result = await _courseManagementService.UpdateClassSectionAsync(userId, nameof(UserRole.ADMIN), UpdateSectionRequest);
+
+            if (result.IsSuccess)
+            {
+                SuccessMessage = result.Message ?? "Class section updated successfully.";
+            }
+            else
+            {
+                ErrorMessage = result.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "OnPostUpdateSectionAsync error. ClassSectionId={ClassSectionId}", UpdateSectionRequest?.ClassSectionId);
+            ErrorMessage = "An unexpected error occurred while updating class section.";
+        }
+
+        return RedirectToPage("./Index", new { CurrentPage, Keyword, IsActive, SemesterId, PageSize });
+    }
+
+    public async Task<IActionResult> OnPostDeleteSectionAsync()
+    {
+        var userId = GetUserId();
+        if (userId == 0) return RedirectToPage("/Account/Login");
+
+        try
+        {
+            var result = await _courseManagementService.DeleteClassSectionAsync(userId, nameof(UserRole.ADMIN), DeleteSectionRequest);
+
+            if (result.IsSuccess)
+            {
+                SuccessMessage = result.Message ?? "Class section closed successfully.";
+            }
+            else
+            {
+                ErrorMessage = result.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "OnPostDeleteSectionAsync error. ClassSectionId={ClassSectionId}", DeleteSectionRequest?.ClassSectionId);
+            ErrorMessage = "An unexpected error occurred while closing class section.";
+        }
+
+        return RedirectToPage("./Index", new { CurrentPage, Keyword, IsActive, SemesterId, PageSize });
     }
 
     public async Task<IActionResult> OnPostCreateAsync()

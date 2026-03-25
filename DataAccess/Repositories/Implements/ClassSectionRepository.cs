@@ -24,6 +24,17 @@ public sealed class ClassSectionRepository : IClassSectionRepository
             .SingleOrDefaultAsync(cs => cs.ClassSectionId == classSectionId);
     }
 
+    public Task<ClassSection?> GetClassSectionByIdAsync(int classSectionId, bool asTracking = false, CancellationToken ct = default)
+    {
+        IQueryable<ClassSection> query = _context.ClassSections
+            .Include(cs => cs.Semester)
+            .Include(cs => cs.Course)
+            .Where(cs => cs.ClassSectionId == classSectionId);
+
+        query = asTracking ? query.AsTracking() : query.AsNoTracking();
+        return query.SingleOrDefaultAsync(ct);
+    }
+
     public Task<ClassSection?> GetClassSectionWithCourseAsync(int classSectionId)
     {
         return _context.ClassSections
@@ -90,5 +101,10 @@ public sealed class ClassSectionRepository : IClassSectionRepository
     public void UpdateRange(IEnumerable<ClassSection> sections)
     {
         _context.ClassSections.UpdateRange(sections);
+    }
+
+    public void Remove(ClassSection section)
+    {
+        _context.ClassSections.Remove(section);
     }
 }

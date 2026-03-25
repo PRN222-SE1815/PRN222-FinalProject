@@ -215,6 +215,20 @@
             reloadIfOnMyCoursesPage();
         });
 
+        connection.on('ClassSectionUpdated', function (payload) {
+            var code = (payload && payload.sectionCode) || '';
+            showRealtimeToast('info', 'Class Section Updated', 'Section updated: ' + code);
+            reloadIfOnCoursePage();
+            reloadIfOnMyCoursesPage();
+        });
+
+        connection.on('ClassSectionDeleted', function (payload) {
+            var code = (payload && payload.sectionCode) || '';
+            showRealtimeToast('warning', 'Class Section Closed', 'Section closed: ' + code);
+            reloadIfOnCoursePage();
+            reloadIfOnMyCoursesPage();
+        });
+
         connection.on('CourseUpdated', function (payload) {
             var code = (payload && payload.courseCode) || '';
             showRealtimeToast('info', 'Course Updated', 'Course updated: ' + code);

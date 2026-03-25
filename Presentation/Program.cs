@@ -35,6 +35,7 @@ builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IStudentScheduleService, StudentScheduleService>();
 builder.Services.AddScoped<ITeacherScheduleService, TeacherScheduleService>();
 builder.Services.AddScoped<IAdminScheduleService, AdminScheduleService>();
+builder.Services.AddScoped<IAdminAnalyticsService, AdminAnalyticsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<INotificationRealtimePublisher, SignalRNotificationRealtimePublisher>();
 builder.Services.AddScoped<IRealtimeEventDispatcher, SignalRRealtimeEventDispatcher>();
@@ -74,6 +75,7 @@ builder.Services.AddScoped<IGradeAppealRepository, GradeAppealRepository>();
 builder.Services.AddScoped<ITransactionHistoryRepository, TransactionHistoryRepository>();
 builder.Services.AddScoped<IAIChatRepository, AIChatRepository>();
 builder.Services.AddScoped<IAIAnalyticsRepository, AIAnalyticsRepository>();
+builder.Services.AddScoped<IAdminAnalyticsRepository, AdminAnalyticsRepository>();
 
 
 // ==================== Razor Pages ====================

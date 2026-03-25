@@ -5,6 +5,7 @@ namespace DataAccess.Repositories.Interfaces;
 public interface IClassSectionRepository
 {
     Task<ClassSection?> GetClassSectionForUpdateAsync(int classSectionId);
+    Task<ClassSection?> GetClassSectionByIdAsync(int classSectionId, bool asTracking = false, CancellationToken ct = default);
     Task<ClassSection?> GetClassSectionWithCourseAsync(int classSectionId);
     /// <summary>
     /// Check if a teacher (by UserId) is assigned to a specific class section.
@@ -28,5 +29,6 @@ public interface IClassSectionRepository
 
     Task<int> CountOpenSectionsByCourseAsync(int courseId, CancellationToken ct = default);
 
+    void Remove(ClassSection section);
     void UpdateRange(IEnumerable<ClassSection> sections);
 }

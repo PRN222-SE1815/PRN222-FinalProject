@@ -14,4 +14,7 @@ public interface ICourseManagementService
 
     Task<ServiceResult<IReadOnlyList<SemesterOptionDto>>> GetAllSemesterOptionsAsync(int actorUserId, string actorRole, CancellationToken ct = default);
     Task<ServiceResult<IReadOnlyList<CourseSectionDto>>> GetCourseSectionsAsync(int actorUserId, string actorRole, int courseId, CancellationToken ct = default);
+    Task<ServiceResult<ClassSectionDetailResponse>> GetClassSectionDetailAsync(int actorUserId, string actorRole, int classSectionId, CancellationToken ct = default);
+    Task<ServiceResult<ClassSectionDetailResponse>> UpdateClassSectionAsync(int actorUserId, string actorRole, UpdateClassSectionRequest request, CancellationToken ct = default);
+    Task<ServiceResult<DeleteClassSectionResultResponse>> DeleteClassSectionAsync(int actorUserId, string actorRole, DeleteClassSectionRequest request, CancellationToken ct = default);
 }

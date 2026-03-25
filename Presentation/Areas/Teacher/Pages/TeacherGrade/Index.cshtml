@@ -1,5 +1,6 @@
 @page
 @model Presentation.Areas.Teacher.Pages.TeacherGrade.IndexModel
+@using System.Text.Json
 @{
     ViewData["Title"] = "Gradebook";
     var gradebook = Model.Gradebook;
@@ -94,6 +95,99 @@
                         </button>
                     </form>
                 </div>
+            }
+
+            @if (Model.GradeAnalytics is not null)
+            {
+                <div class="chart-toggle-bar">
+                    <button type="button" id="toggleChartsBtn" class="btn btn-secondary" aria-expanded="false" aria-controls="gradeChartsSection">
+                        <i class="fas fa-chart-simple"></i>
+                        <span id="toggleChartsText">Hiển thị thống kê biểu đồ</span>
+                    </button>
+                </div>
+
+                <section id="gradeChartsSection" class="grade-charts is-hidden">
+                    <div class="chart-row">
+                        <div class="chart-card">
+                            <h3 class="chart-title">Phân bố điểm tổng kết</h3>
+                            <div class="chart-canvas-wrap">
+                                <canvas id="scoreDistributionChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3 class="chart-title">Điểm trung bình theo từng bài kiểm tra</h3>
+                            <div class="chart-canvas-wrap">
+                                <canvas id="gradeItemsPerformanceChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3 class="chart-title">Tỉ lệ xếp loại học lực</h3>
+                            <div class="chart-canvas-wrap">
+                                <canvas id="rankingRatioChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ranking-row">
+                        <div class="chart-card ranking-card">
+                            <h3 class="chart-title">Top 3 sinh viên điểm trung bình cao nhất</h3>
+                            <div class="mini-table-wrap">
+                                <table class="mini-ranking-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Student</th>
+                                            <th>Điểm TB</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (var i = 0; i < Model.GradeAnalytics.TopStudents.Count; i++)
+                                        {
+                                            var student = Model.GradeAnalytics.TopStudents[i];
+                                            <tr>
+                                                <td>@(i + 1)</td>
+                                                <td>
+                                                    <div class="mini-student-name">@student.StudentName</div>
+                                                    <div class="mini-student-code">@student.StudentCode</div>
+                                                </td>
+                                                <td>@student.AverageScore.ToString("0.##")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="chart-card ranking-card">
+                            <h3 class="chart-title">Top 3 sinh viên điểm trung bình thấp nhất</h3>
+                            <div class="mini-table-wrap">
+                                <table class="mini-ranking-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Student</th>
+                                            <th>Điểm TB</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (var i = 0; i < Model.GradeAnalytics.BottomStudents.Count; i++)
+                                        {
+                                            var student = Model.GradeAnalytics.BottomStudents[i];
+                                            <tr>
+                                                <td>@(i + 1)</td>
+                                                <td>
+                                                    <div class="mini-student-name">@student.StudentName</div>
+                                                    <div class="mini-student-code">@student.StudentCode</div>
+                                                </td>
+                                                <td>@student.AverageScore.ToString("0.##")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             }
 
             @if (gradebook.GradeItems.Count == 0)
@@ -221,4 +315,118 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/Teacher/TeacherGrade/Index.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        (() => {
+            const analytics = @Html.Raw(JsonSerializer.Serialize(Model.GradeAnalytics));
+            if (!analytics) {
+                return;
+            }
+
+            const chartsSection = document.getElementById('gradeChartsSection');
+            const toggleBtn = document.getElementById('toggleChartsBtn');
+            const toggleText = document.getElementById('toggleChartsText');
+
+            if (!chartsSection || !toggleBtn || !toggleText) {
+                return;
+            }
+
+            let isVisible = false;
+            let chartsInitialized = false;
+
+            toggleBtn.addEventListener('click', () => {
+                isVisible = !isVisible;
+                chartsSection.classList.toggle('is-hidden', !isVisible);
+                toggleBtn.setAttribute('aria-expanded', isVisible ? 'true' : 'false');
+                toggleText.textContent = isVisible
+                    ? 'Ẩn thống kê biểu đồ'
+                    : 'Hiển thị thống kê biểu đồ';
+
+                if (isVisible && !chartsInitialized) {
+                    initCharts();
+                    chartsInitialized = true;
+                }
+            });
+
+            function initCharts() {
+                new Chart(document.getElementById('scoreDistributionChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: analytics.DistributionLabels,
+                        datasets: [{
+                            label: 'Số lượng sinh viên',
+                            data: analytics.DistributionValues,
+                            backgroundColor: '#14B8A6',
+                            borderColor: '#0F766E',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+
+                new Chart(document.getElementById('gradeItemsPerformanceChart'), {
+                    type: 'radar',
+                    data: {
+                        labels: analytics.PerformanceLabels,
+                        datasets: [{
+                            label: 'Điểm trung bình (thang 10)',
+                            data: analytics.PerformanceValues,
+                            fill: true,
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: '#2563EB',
+                            pointBackgroundColor: '#2563EB'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                min: 0,
+                                max: 10,
+                                ticks: {
+                                    stepSize: 2
+                                }
+                            }
+                        }
+                    }
+                });
+
+                new Chart(document.getElementById('rankingRatioChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: analytics.RankingLabels,
+                        datasets: [{
+                            data: analytics.RankingValues,
+                            backgroundColor: [
+                                '#EF4444',
+                                '#F59E0B',
+                                '#10B981',
+                                '#3B82F6',
+                                '#8B5CF6'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+        })();
+    </script>
 }

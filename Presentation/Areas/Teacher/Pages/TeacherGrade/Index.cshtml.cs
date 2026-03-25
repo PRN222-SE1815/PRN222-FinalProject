@@ -42,6 +42,7 @@ public class IndexModel : PageModel
     public decimal? PrefillNewScore { get; set; }
 
     public GradebookDetailResponse? Gradebook { get; set; }
+    public GradeAnalyticsViewModel? GradeAnalytics { get; set; }
     public List<AppealFocusGradeItemViewModel> AppealFocusGradeItems { get; set; } = [];
     public HashSet<int> AppealFocusGradeItemIds => AppealFocusGradeItems.Select(x => x.GradeItemId).ToHashSet();
 
@@ -158,6 +159,7 @@ public class IndexModel : PageModel
         {
             Gradebook = result.Data;
             BuildEnrollmentRows();
+            BuildGradeAnalytics();
         }
         else
         {
@@ -299,6 +301,173 @@ public class IndexModel : PageModel
         EnrollmentRows = rows;
     }
 
+    private void BuildGradeAnalytics()
+    {
+        if (Gradebook is null || Gradebook.GradeItems.Count == 0 || EnrollmentRows.Count == 0)
+        {
+            GradeAnalytics = null;
+            return;
+        }
+
+        var orderedItems = Gradebook.GradeItems
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.GradeItemId)
+            .ToList();
+
+        var studentTotals = EnrollmentRows
+            .Select(row => new StudentPerformanceRowViewModel
+            {
+                EnrollmentId = row.EnrollmentId,
+                StudentCode = row.StudentCode,
+                StudentName = row.StudentName,
+                AverageScore = CalculateStudentTotalScore(row, orderedItems)
+            })
+            .ToList();
+
+        var distributionLabels = new List<string>
+        {
+            "< 4.0",
+            "4.0 - 5.49",
+            "5.5 - 6.99",
+            "7.0 - 8.49",
+            "8.5 - 10"
+        };
+        var distributionValues = new int[distributionLabels.Count];
+
+        foreach (var total in studentTotals.Select(x => x.AverageScore))
+        {
+            distributionValues[ResolveScoreBand(total)]++;
+        }
+
+        var itemLabels = new List<string>();
+        var itemAverageValues = new List<decimal>();
+
+        foreach (var item in orderedItems)
+        {
+            var scores = EnrollmentRows
+                .Select(row => row.Scores.TryGetValue(item.GradeItemId, out var score) ? score : null)
+                .Where(score => score.HasValue)
+                .Select(score => score!.Value)
+                .ToList();
+
+            var averageNormalized = 0m;
+            if (scores.Count > 0 && item.MaxScore > 0m)
+            {
+                var averageRaw = scores.Average();
+                averageNormalized = Math.Clamp((averageRaw / item.MaxScore) * 10m, 0m, 10m);
+            }
+
+            itemLabels.Add(item.ItemName);
+            itemAverageValues.Add(Math.Round(averageNormalized, 2, MidpointRounding.AwayFromZero));
+        }
+
+        GradeAnalytics = new GradeAnalyticsViewModel
+        {
+            DistributionLabels = distributionLabels,
+            DistributionValues = distributionValues.ToList(),
+            PerformanceLabels = itemLabels,
+            PerformanceValues = itemAverageValues,
+            RankingLabels = new List<string>
+            {
+                "Yếu (< 4.0)",
+                "Trung bình (4.0 - 5.49)",
+                "Khá (5.5 - 6.99)",
+                "Giỏi (7.0 - 8.49)",
+                "Xuất sắc (8.5 - 10)"
+            },
+            RankingValues = new List<int>
+            {
+                distributionValues[0],
+                distributionValues[1],
+                distributionValues[2],
+                distributionValues[3],
+                distributionValues[4]
+            },
+            TopStudents = studentTotals
+                .OrderByDescending(x => x.AverageScore)
+                .ThenBy(x => x.StudentName)
+                .ThenBy(x => x.StudentCode)
+                .Take(3)
+                .ToList(),
+            BottomStudents = studentTotals
+                .OrderBy(x => x.AverageScore)
+                .ThenBy(x => x.StudentName)
+                .ThenBy(x => x.StudentCode)
+                .Take(3)
+                .ToList()
+        };
+    }
+
+    private static decimal CalculateStudentTotalScore(EnrollmentRow row, IReadOnlyList<GradeItemResponse> items)
+    {
+        var weightedItems = items.Where(x => x.Weight.HasValue && x.Weight.Value > 0m).ToList();
+        if (weightedItems.Count > 0)
+        {
+            var weightedTotal = 0m;
+            foreach (var item in weightedItems)
+            {
+                row.Scores.TryGetValue(item.GradeItemId, out var score);
+                var normalizedScore = score.HasValue
+                    ? NormalizeToTen(score.Value, item.MaxScore)
+                    : 0m;
+
+                weightedTotal += normalizedScore * item.Weight!.Value;
+            }
+
+            return Math.Round(Math.Clamp(weightedTotal, 0m, 10m), 2, MidpointRounding.AwayFromZero);
+        }
+
+        var normalizedScores = items
+            .Select(item => row.Scores.TryGetValue(item.GradeItemId, out var score) && score.HasValue
+                ? NormalizeToTen(score.Value, item.MaxScore)
+                : (decimal?)null)
+            .Where(x => x.HasValue)
+            .Select(x => x!.Value)
+            .ToList();
+
+        if (normalizedScores.Count == 0)
+        {
+            return 0m;
+        }
+
+        return Math.Round(normalizedScores.Average(), 2, MidpointRounding.AwayFromZero);
+    }
+
+    private static decimal NormalizeToTen(decimal score, decimal maxScore)
+    {
+        if (maxScore <= 0m)
+        {
+            return 0m;
+        }
+
+        return Math.Clamp((score / maxScore) * 10m, 0m, 10m);
+    }
+
+    private static int ResolveScoreBand(decimal total)
+    {
+        if (total < 4.0m)
+        {
+            return 0;
+        }
+
+        if (total < 5.5m)
+        {
+            return 1;
+        }
+
+        if (total < 7.0m)
+        {
+            return 2;
+        }
+
+        if (total < 8.5m)
+        {
+            return 3;
+        }
+
+        return 4;
+    }
+
     private int GetUserId()
     {
         var claim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -320,5 +489,25 @@ public class IndexModel : PageModel
         public decimal? CurrentScore { get; set; }
         public decimal MaxScore { get; set; }
         public decimal? PrefillNewScore { get; set; }
+    }
+
+    public sealed class GradeAnalyticsViewModel
+    {
+        public IReadOnlyList<string> DistributionLabels { get; set; } = [];
+        public IReadOnlyList<int> DistributionValues { get; set; } = [];
+        public IReadOnlyList<string> PerformanceLabels { get; set; } = [];
+        public IReadOnlyList<decimal> PerformanceValues { get; set; } = [];
+        public IReadOnlyList<string> RankingLabels { get; set; } = [];
+        public IReadOnlyList<int> RankingValues { get; set; } = [];
+        public IReadOnlyList<StudentPerformanceRowViewModel> TopStudents { get; set; } = [];
+        public IReadOnlyList<StudentPerformanceRowViewModel> BottomStudents { get; set; } = [];
+    }
+
+    public sealed class StudentPerformanceRowViewModel
+    {
+        public int EnrollmentId { get; set; }
+        public string StudentCode { get; set; } = string.Empty;
+        public string StudentName { get; set; } = string.Empty;
+        public decimal AverageScore { get; set; }
     }
 }

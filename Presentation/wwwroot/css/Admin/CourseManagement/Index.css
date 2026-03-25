@@ -382,10 +382,26 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.85rem;
+    table-layout: fixed;
 }
 
 .sections-table thead {
     background: #E2E8F0;
+}
+
+.sections-table th.col-enrolled,
+.sections-table td.col-enrolled {
+    width: 170px;
+}
+
+.sections-table th.col-status,
+.sections-table td.col-status {
+    width: 120px;
+}
+
+.sections-table th.col-actions,
+.sections-table td.col-actions {
+    width: 110px;
 }
 
 .sections-table th {
@@ -410,6 +426,20 @@
 .enrollment-count {
     font-weight: 600;
     color: #1E293B;
+}
+
+.section-action-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    justify-content: center;
+}
+
+.btn-section-edit,
+.btn-section-delete {
+    width: 30px;
+    height: 30px;
+    font-size: 0.72rem;
 }
 
 .btn-edit {

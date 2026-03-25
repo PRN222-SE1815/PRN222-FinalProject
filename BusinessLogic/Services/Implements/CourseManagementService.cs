@@ -20,6 +20,8 @@ public sealed class CourseManagementService : ICourseManagementService
     private const string RealtimeEventCourseDeactivated = "CourseDeactivated";
     private const string RealtimeEventCourseCreated = "CourseCreated";
     private const string RealtimeEventCourseUpdated = "CourseUpdated";
+    private const string RealtimeEventClassSectionUpdated = "ClassSectionUpdated";
+    private const string RealtimeEventClassSectionDeleted = "ClassSectionDeleted";
     private const string StudentDeepLink = "/Student/MyCourses";
     private const string TeacherDeepLink = "/Teacher/MyClasses";
 
@@ -580,6 +582,17 @@ public sealed class CourseManagementService : ICourseManagementService
         return $"{existingNotes.Trim()}\n{noteLine}";
     }
 
+    private static string AppendSectionClosedNote(string? existingNotes, string reason, DateTime nowUtc)
+    {
+        var noteLine = $"[Class section closed {nowUtc:yyyy-MM-dd HH:mm:ss} UTC] {reason}";
+        if (string.IsNullOrWhiteSpace(existingNotes))
+        {
+            return noteLine;
+        }
+
+        return $"{existingNotes.Trim()}\n{noteLine}";
+    }
+
     private async Task SendCourseDeactivatedNotificationsAsync(
         Course course,
         string reason,
@@ -696,5 +709,233 @@ public sealed class CourseManagementService : ICourseManagementService
             _logger.LogError(ex, "GetCourseSectionsAsync failed. CourseId={CourseId}", courseId);
             return ServiceResult<IReadOnlyList<CourseSectionDto>>.Fail(ErrorCodes.InternalError, "Failed to load sections.");
         }
+    }
+
+    public async Task<ServiceResult<ClassSectionDetailResponse>> GetClassSectionDetailAsync(
+        int actorUserId,
+        string actorRole,
+        int classSectionId,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var authResult = await AuthorizeAdminAsync(actorUserId, actorRole);
+            if (!authResult.IsSuccess)
+            {
+                return ServiceResult<ClassSectionDetailResponse>.Fail(authResult.ErrorCode!, authResult.Message);
+            }
+
+            if (classSectionId <= 0)
+            {
+                return ServiceResult<ClassSectionDetailResponse>.Fail(ErrorCodes.InvalidInput, "ClassSectionId must be greater than 0.");
+            }
+
+            var section = await _classSectionRepository.GetClassSectionByIdAsync(classSectionId, false, ct);
+            if (section is null)
+            {
+                return ServiceResult<ClassSectionDetailResponse>.Fail(ErrorCodes.NotFound, "Class section not found.");
+            }
+
+            return ServiceResult<ClassSectionDetailResponse>.Success(MapClassSectionDetail(section));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GetClassSectionDetailAsync failed. ClassSectionId={ClassSectionId}", classSectionId);
+            return ServiceResult<ClassSectionDetailResponse>.Fail(ErrorCodes.InternalError, "Failed to load class section detail.");
+        }
+    }
+
+    public async Task<ServiceResult<ClassSectionDetailResponse>> UpdateClassSectionAsync(
+        int actorUserId,
+        string actorRole,
+        UpdateClassSectionRequest request,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var authResult = await AuthorizeAdminAsync(actorUserId, actorRole);
+            if (!authResult.IsSuccess)
+            {
+                return ServiceResult<ClassSectionDetailResponse>.Fail(authResult.ErrorCode!, authResult.Message);
+            }
+
+            if (request is null || request.ClassSectionId <= 0)
+            {
+                return ServiceResult<ClassSectionDetailResponse>.Fail(ErrorCodes.InvalidInput, "Invalid update class section payload.");
+            }
+
+            var normalizedSectionCode = request.SectionCode?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(normalizedSectionCode))
+            {
+                return ServiceResult<ClassSectionDetailResponse>.Fail(ErrorCodes.InvalidInput, "Section code is required.");
+            }
+
+            if (request.MaxCapacity <= 0)
+            {
+                return ServiceResult<ClassSectionDetailResponse>.Fail(ErrorCodes.InvalidInput, "Max capacity must be greater than 0.");
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
+            var section = await _classSectionRepository.GetClassSectionByIdAsync(request.ClassSectionId, true, ct);
+            if (section is null)
+            {
+                await transaction.RollbackAsync(ct);
+                return ServiceResult<ClassSectionDetailResponse>.Fail(ErrorCodes.NotFound, "Class section not found.");
+            }
+
+            if (request.MaxCapacity < section.CurrentEnrollment)
+            {
+                await transaction.RollbackAsync(ct);
+                return ServiceResult<ClassSectionDetailResponse>.Fail(ErrorCodes.InvalidInput, "Max capacity cannot be lower than current enrollment.");
+            }
+
+            var duplicateSectionCode = await _dbContext.ClassSections
+                .AsNoTracking()
+                .AnyAsync(cs => cs.ClassSectionId != section.ClassSectionId
+                    && cs.CourseId == section.CourseId
+                    && cs.SemesterId == section.SemesterId
+                    && cs.SectionCode == normalizedSectionCode, ct);
+
+            if (duplicateSectionCode)
+            {
+                await transaction.RollbackAsync(ct);
+                return ServiceResult<ClassSectionDetailResponse>.Fail(ErrorCodes.Conflict, "Section code already exists in this semester/course.");
+            }
+
+            section.SectionCode = normalizedSectionCode;
+            section.Room = string.IsNullOrWhiteSpace(request.Room) ? null : request.Room.Trim();
+            section.MaxCapacity = request.MaxCapacity;
+            section.IsOpen = request.IsOpen;
+
+            await _courseRepository.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
+
+            await _realtimeEventDispatcher.DispatchToAllAsync(
+                RealtimeEventClassSectionUpdated,
+                new
+                {
+                    classSectionId = section.ClassSectionId,
+                    courseId = section.CourseId,
+                    sectionCode = section.SectionCode,
+                    maxCapacity = section.MaxCapacity,
+                    isOpen = section.IsOpen,
+                    message = $"Class section updated: {section.SectionCode}"
+                },
+                ct);
+
+            var reloaded = await _classSectionRepository.GetClassSectionByIdAsync(section.ClassSectionId, false, ct);
+            if (reloaded is null)
+            {
+                return ServiceResult<ClassSectionDetailResponse>.Fail(ErrorCodes.NotFound, "Class section not found after update.");
+            }
+
+            return ServiceResult<ClassSectionDetailResponse>.Success(MapClassSectionDetail(reloaded), "Class section updated successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UpdateClassSectionAsync failed. ClassSectionId={ClassSectionId}", request?.ClassSectionId);
+            return ServiceResult<ClassSectionDetailResponse>.Fail(ErrorCodes.InternalError, "Failed to update class section.");
+        }
+    }
+
+    public async Task<ServiceResult<DeleteClassSectionResultResponse>> DeleteClassSectionAsync(
+        int actorUserId,
+        string actorRole,
+        DeleteClassSectionRequest request,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var authResult = await AuthorizeAdminAsync(actorUserId, actorRole);
+            if (!authResult.IsSuccess)
+            {
+                return ServiceResult<DeleteClassSectionResultResponse>.Fail(authResult.ErrorCode!, authResult.Message);
+            }
+
+            if (request is null || request.ClassSectionId <= 0)
+            {
+                return ServiceResult<DeleteClassSectionResultResponse>.Fail(ErrorCodes.InvalidInput, "Invalid delete class section payload.");
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
+            var section = await _classSectionRepository.GetClassSectionByIdAsync(request.ClassSectionId, true, ct);
+            if (section is null)
+            {
+                await transaction.RollbackAsync(ct);
+                return ServiceResult<DeleteClassSectionResultResponse>.Fail(ErrorCodes.NotFound, "Class section not found.");
+            }
+
+            if (!section.IsOpen)
+            {
+                await transaction.RollbackAsync(ct);
+                return ServiceResult<DeleteClassSectionResultResponse>.Success(
+                    new DeleteClassSectionResultResponse
+                    {
+                        ClassSectionId = section.ClassSectionId,
+                        CourseId = section.CourseId,
+                        Message = "Class section already closed."
+                    },
+                    "Class section already closed.");
+            }
+
+            var reason = string.IsNullOrWhiteSpace(request.Reason)
+                ? "Section closed by admin"
+                : request.Reason.Trim();
+
+            section.IsOpen = false;
+            section.Notes = AppendSectionClosedNote(section.Notes, reason, DateTime.UtcNow);
+
+            var deletedSectionId = section.ClassSectionId;
+            var deletedCourseId = section.CourseId;
+            var deletedSectionCode = section.SectionCode;
+
+            await _courseRepository.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
+
+            await _realtimeEventDispatcher.DispatchToAllAsync(
+                RealtimeEventClassSectionDeleted,
+                new
+                {
+                    classSectionId = deletedSectionId,
+                    courseId = deletedCourseId,
+                    sectionCode = deletedSectionCode,
+                    isOpen = false,
+                    reason,
+                    message = $"Class section closed: {deletedSectionCode}"
+                },
+                ct);
+
+            return ServiceResult<DeleteClassSectionResultResponse>.Success(
+                new DeleteClassSectionResultResponse
+                {
+                    ClassSectionId = deletedSectionId,
+                    CourseId = deletedCourseId,
+                    Message = "Class section closed successfully."
+                },
+                "Class section closed successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "DeleteClassSectionAsync failed. ClassSectionId={ClassSectionId}", request?.ClassSectionId);
+            return ServiceResult<DeleteClassSectionResultResponse>.Fail(ErrorCodes.InternalError, "Failed to close class section.");
+        }
+    }
+
+    private static ClassSectionDetailResponse MapClassSectionDetail(ClassSection section)
+    {
+        return new ClassSectionDetailResponse
+        {
+            ClassSectionId = section.ClassSectionId,
+            CourseId = section.CourseId,
+            SemesterId = section.SemesterId,
+            SemesterName = section.Semester?.SemesterName ?? string.Empty,
+            SectionCode = section.SectionCode,
+            Room = section.Room ?? "—",
+            CurrentEnrollment = section.CurrentEnrollment,
+            MaxCapacity = section.MaxCapacity,
+            IsOpen = section.IsOpen
+        };
     }
 }

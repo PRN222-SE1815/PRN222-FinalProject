@@ -40,6 +40,7 @@
                 <i class="fas fa-check-circle"></i> @Model.SuccessMessage
             </div>
         }
+
         @if (!string.IsNullOrEmpty(Model.ErrorMessage))
         {
             <div class="alert alert-error">
@@ -217,6 +218,97 @@
         }
     </div>
 </section>
+
+<!-- Update Class Section Modal -->
+<div class="modal-overlay" id="sectionEditModal">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <h2><i class="fas fa-pen"></i> Edit Class Section</h2>
+            <button type="button" class="modal-close" onclick="closeModal('sectionEditModal')">&times;</button>
+        </div>
+        <form method="post" asp-page-handler="UpdateSection">
+            <input type="hidden" name="CurrentPage" value="@currentPage" />
+            <input type="hidden" name="Keyword" value="@Model.Keyword" />
+            <input type="hidden" name="IsActive" value="@Model.IsActive" />
+            <input type="hidden" name="SemesterId" value="@Model.SemesterId" />
+            <input type="hidden" name="PageSize" value="@pageSize" />
+
+            <div class="modal-body">
+                <input type="hidden" name="UpdateSectionRequest.ClassSectionId" id="editSectionId" />
+
+                <div class="form-group">
+                    <label>Section Code <span class="required">*</span></label>
+                    <input type="text" name="UpdateSectionRequest.SectionCode" id="editSectionCode" required maxlength="50" class="form-input" />
+                </div>
+
+                <div class="form-group">
+                    <label>Room</label>
+                    <input type="text" name="UpdateSectionRequest.Room" id="editSectionRoom" maxlength="100" class="form-input" />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Current Enrollment</label>
+                        <input type="number" id="editSectionCurrentEnrollment" class="form-input" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label>Max Capacity <span class="required">*</span></label>
+                        <input type="number" name="UpdateSectionRequest.MaxCapacity" id="editSectionMaxCapacity" required min="1" class="form-input" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="UpdateSectionRequest.IsOpen" id="editSectionIsOpen" class="form-input">
+                        <option value="true">Open</option>
+                        <option value="false">Closed</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('sectionEditModal')">Cancel</button>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i> Save Section
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Close Class Section Modal -->
+<div class="modal-overlay" id="sectionDeleteModal">
+    <div class="modal modal-sm">
+        <div class="modal-header modal-header-danger">
+            <h2><i class="fas fa-ban"></i> Close Class Section</h2>
+            <button type="button" class="modal-close" onclick="closeModal('sectionDeleteModal')">&times;</button>
+        </div>
+        <form method="post" asp-page-handler="DeleteSection">
+            <input type="hidden" name="CurrentPage" value="@currentPage" />
+            <input type="hidden" name="Keyword" value="@Model.Keyword" />
+            <input type="hidden" name="IsActive" value="@Model.IsActive" />
+            <input type="hidden" name="SemesterId" value="@Model.SemesterId" />
+            <input type="hidden" name="PageSize" value="@pageSize" />
+
+            <div class="modal-body">
+                <input type="hidden" name="DeleteSectionRequest.ClassSectionId" id="deleteSectionId" />
+                <p class="deactivate-warning">
+                    Are you sure you want to close class section <strong id="deleteSectionCode"></strong>?
+                    Students cannot enroll while the section is closed.
+                </p>
+                <div class="form-group">
+                    <label>Reason (optional)</label>
+                    <textarea name="DeleteSectionRequest.Reason" rows="2" class="form-input" placeholder="Reason for closing section..."></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('sectionDeleteModal')">Cancel</button>
+                <button type="submit" class="btn-danger"><i class="fas fa-ban"></i> Close Section</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- Create Modal -->
 <div class="modal-overlay" id="createModal">
@@ -401,6 +493,33 @@
             document.getElementById('deactivateModal').classList.add('open');
         }
 
+        async function openSectionEditModal(classSectionId) {
+            try {
+                var response = await fetch('?handler=SectionDetail&classSectionId=' + classSectionId);
+                var result = await response.json();
+                if (result.success && result.data) {
+                    var d = result.data;
+                    document.getElementById('editSectionId').value = d.classSectionId;
+                    document.getElementById('editSectionCode').value = d.sectionCode || '';
+                    document.getElementById('editSectionRoom').value = d.room && d.room !== '—' ? d.room : '';
+                    document.getElementById('editSectionCurrentEnrollment').value = d.currentEnrollment || 0;
+                    document.getElementById('editSectionMaxCapacity').value = d.maxCapacity || 1;
+                    document.getElementById('editSectionIsOpen').value = d.isOpen ? 'true' : 'false';
+                    document.getElementById('sectionEditModal').classList.add('open');
+                } else {
+                    alert(result.message || 'Failed to load class section detail.');
+                }
+            } catch (e) {
+                alert('Failed to load class section detail.');
+            }
+        }
+
+        function openSectionDeleteModal(classSectionId, sectionCode) {
+            document.getElementById('deleteSectionId').value = classSectionId;
+            document.getElementById('deleteSectionCode').textContent = sectionCode;
+            document.getElementById('sectionDeleteModal').classList.add('open');
+        }
+
         // Close modal on overlay click
         document.addEventListener('click', function (e) {
             if (e.target.classList.contains('modal-overlay')) {
@@ -443,7 +562,7 @@
                         var container = document.getElementById('sections-content-' + courseId);
                         if (result.success && result.data && result.data.length > 0) {
                             var html = '<table class="sections-table">';
-                            html += '<thead><tr><th>Section</th><th>Semester</th><th>Room</th><th class="text-center">Enrolled</th><th class="text-center">Status</th></tr></thead><tbody>';
+                            html += '<thead><tr><th>Section</th><th>Semester</th><th>Room</th><th class="text-center col-enrolled">Enrolled</th><th class="text-center col-status">Status</th><th class="text-center col-actions">Actions</th></tr></thead><tbody>';
                             result.data.forEach(function (s) {
                                 var statusClass = s.isOpen ? 'status-active' : 'status-inactive';
                                 var statusText = s.isOpen ? 'Open' : 'Closed';
@@ -451,8 +570,14 @@
                                 html += '<td><strong>' + escapeHtml(s.sectionCode) + '</strong></td>';
                                 html += '<td>' + escapeHtml(s.semesterName) + '</td>';
                                 html += '<td>' + escapeHtml(s.room) + '</td>';
-                                html += '<td class="text-center"><span class="enrollment-count">' + s.currentEnrollment + ' / ' + s.maxCapacity + '</span></td>';
-                                html += '<td class="text-center"><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>';
+                                html += '<td class="text-center col-enrolled"><span class="enrollment-count">' + s.currentEnrollment + ' / ' + s.maxCapacity + '</span></td>';
+                                html += '<td class="text-center col-status"><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>';
+                                html += '<td class="text-center col-actions">';
+                                html += '  <div class="section-action-buttons">';
+                                html += '      <button type="button" class="btn-edit btn-section-edit" title="Edit section" onclick="openSectionEditModal(' + s.classSectionId + ')"><i class="fas fa-pen"></i></button>';
+                                html += '      <button type="button" class="btn-deactivate btn-section-delete" title="Close section" onclick="openSectionDeleteModal(' + s.classSectionId + ', \'' + escapeJsString(s.sectionCode) + '\')"><i class="fas fa-ban"></i></button>';
+                                html += '  </div>';
+                                html += '</td>';
                                 html += '</tr>';
                             });
                             html += '</tbody></table>';
@@ -475,6 +600,10 @@
             var div = document.createElement('div');
             div.textContent = text || '';
             return div.innerHTML;
+        }
+
+        function escapeJsString(text) {
+            return String(text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         }
     </script>
 }
