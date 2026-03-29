@@ -1,185 +1,188 @@
-# Technical Documentation: School Management System (PRN222 Final Project)
+# School Management System (PRN222 Final Project)
 
-## 1. PROJECT OVERVIEW
+## 1. Overview
 
-The School Management System is a centralized platform designed to digitize and automate academic and administrative processes within an educational institution. The system facilitates the management of student records, faculty assignments, course registrations, grading workflows, and financial transactions. 
+This project is a comprehensive School Management System built with .NET 8. It provides a centralized platform for managing academic operations, including student registration, course scheduling, grading workflows, and real-time communication between students and faculty.
 
-Core functionalities identified within the codebase include:
-*   **Identity Management**: Secure authentication and authorization for Students, Teachers, and Administrators.
-*   **Academic Administration**: Management of programs, courses, semesters, and class sections.
-*   **Grade Management**: A structured gradebook system supporting weighted assessments, audit logs, and appeal processes.
-*   **Real-time Communication**: Chat modules and notification systems for academic coordination.
-*   **Integrated Finance**: Student wallet management with MoMo Payment Gateway integration for tuition settlement.
-*   **Intelligent Assistance**: AI-driven support and analytics integrated via Google Gemini.
+### Key Capabilities
+*   **Academic Management**: Enroll students, assign teachers to class sections, and manage semester-based course offerings.
+*   **Gradebook Lifecycle**: Support for weighted grading, audit logging, and automated weighted total calculation.
+*   **Real-time Interaction**: Integrated chat rooms for courses/classes and instant notifications via SignalR.
+*   **Financial Integration**: Student wallet management with MoMo Payment Gateway support for tuition payments.
+*   **AI-Enhanced Features**: Automated analysis and assistance modules powered by Google Gemini AI.
 
 ---
 
-## 2. SYSTEM ARCHITECTURE
+## 2. Architecture
 
-### 2.1 Architectural Pattern
+### 2.1 High-level Design
 
-The system implements a Modular Layered Architecture, adhering to the principles of separation of concerns and maintainability. It is structured into four distinct layers that follow a strict dependency flow:
+The system is implemented using a 4-project structure that logically maps to a 3-layer architecture pattern:
 
-1.  **Presentation Layer** (UI/Web)
-2.  **Business Logic Layer** (Service/Application)
-3.  **Data Access Layer** (Persistence)
-4.  **Business Object Layer** (Shared Entities)
+*   **Presentation Layer (`Presentation`)**: ASP.NET Core Razor Pages that handle HTTP requests, session management (Cookie Auth), and SignalR hub coordination.
+*   **Application Layer (`BusinessLogic`)**: Contains domain services that execute business rules, orchestrates data between the presentation and data layers, and handles external API integrations (Gemini, MoMo).
+*   **Data Layer (`DataAccess`)**: Implements the Repository pattern using Entity Framework Core to manage SQL Server persistence.
+*   **Domain Layer (`BusinessObject`)**: Defines shared entities, enums, and data models used across all layers.
 
-### 2.2 Architecture Explanation
+### 2.2 Data Flow
 
-*   **Presentation Layer (`Presentation`)**: Implemented using ASP.NET Core Razor Pages. This layer handles HTTP requests, manages user sessions via cookie authentication, and renders the user interface. It also hosts SignalR Hubs for real-time features.
-*   **Business Logic Layer (`BusinessLogic`)**: Contains the core application logic, service interfaces, and implementations. It serves as an intermediary, processing data from the Presentation Layer before interacting with the Data Access Layer. It also manages integrations with external APIs like Gemini and MoMo.
-*   **Data Access Layer (`DataAccess`)**: Responsible for data persistence and retrieval. It utilizes Entity Framework Core for Object-Relational Mapping (ORM) and implements the Repository pattern to abstract database operations.
-*   **Business Object Layer (`BusinessObject`)**: Defines the domain models, database entities, and shared enumerations used across all layers.
+1.  **Request**: User interacts with a Razor Page (UI).
+2.  **Service**: The Page Model invokes a method in a corresponding `Service` class.
+3.  **Repository**: The Service performs business validation and calls a `Repository` method.
+4.  **Database**: The Repository interacts with `SchoolManagementDbContext` to perform SQL operations.
+5.  **Return**: Data flows back up through the layers, potentially triggering real-time SignalR updates before rendering the final view.
 
 ### 2.3 Architecture Diagram
 
 ```mermaid
 graph TD
-    subgraph "Presentation Layer (Web)"
-        A[Razor Pages / Hubs]
+    subgraph Client
+        Browser[Client Browser]
     end
 
-    subgraph "Application Layer (Service)"
-        B[Business Logic Services]
-        C[Internal DTO Modules]
+    subgraph Presentation_Layer
+        RP[Razor Pages]
+        Hubs[SignalR Hubs]
     end
 
-    subgraph "Infrastructure & Persistence"
-        D[Data Access Layer / EF Core]
-        E[SQL Server Database]
+    subgraph Application_Layer
+        Services[Business Services]
+        Integrations[Gemini / MoMo APIs]
     end
 
-    subgraph "External Integrations"
-        F[Google Gemini AI]
-        G[MoMo Payment Gateway]
+    subgraph Data_Layer
+        Repo[Repositories]
+        Context[EF Core DbContext]
     end
 
-    A --> B
-    B --> D
-    D --> E
-    B -.-> F
-    B -.-> G
+    Database[(SQL Server)]
+
+    Browser <--> RP
+    Browser <--> Hubs
+    RP --> Services
+    Services --> Integrations
+    Services --> Repo
+    Repo --> Context
+    Context --> Database
 ```
 
 ---
 
-## 3. PROJECT STRUCTURE
+## 3. Project Structure
 
-The solution directory is organized as follows:
+The codebase is organized into four main projects:
 
-*   **`Presentation/`**: Entry point of the application. Contains the Razor Pages, Middleware, SignalR Hubs, and static assets (`wwwroot`).
-*   **`BusinessLogic/`**: Core services (`Services`), Data Transfer Objects (`DTOs`), and configuration settings.
-*   **`DataAccess/`**: Repository implementations and the `SchoolManagementDbContext` for SQL Server interaction.
-*   **`BusinessObject/`**: Centralized definitions for Database Entities and Enums.
-*   **`PRN222_G5_finalproject.sql`**: Comprehensive T-SQL script for database schema initialization and data seeding.
-
----
-
-## 4. TECHNOLOGY STACK
-
-*   **Frontend**: ASP.NET Core Razor Pages, JavaScript, SignalR (WebSockets).
-*   **Backend**: .NET 8.0, C#.
-*   **Database**: SQL Server 2019+ (Express/LocalDB/Standard).
-*   **ORM**: Entity Framework Core 8.0.
-*   **Security**: Cookie Authentication, BCrypt Password Hashing.
-*   **Documentation & Reporting**: Mermaid.js, CSV/XSLX Export Libraries.
+*   **`Presentation/`**: The web entry point containing UI components, middleware, and app configuration.
+*   **`BusinessLogic/`**: Logic for core domains (Enrollment, Payment, Grades, Scheduling).
+*   **`DataAccess/`**: Database context and concrete repository implementations.
+*   **`BusinessObject/`**: Central definition for database tables (Entities) and shared Enums.
 
 ---
 
-## 5. SYSTEM FLOW
+## 4. Technology Stack
 
-1.  **Request Initiation**: The user interacts with the Presentation Layer via a browser.
-2.  **Authentication/Authorization**: Middleware validates the user's session and role permissions.
-3.  **Service Invocation**: The Presentation Layer calls the appropriate Service within the Business Logic Layer.
-4.  **Data Processing**: The Service performs business validation, external API calls (if required), and prepares data for persistence.
-5.  **Persistence**: The Service interacts with Repositories in the Data Access Layer to perform CRUD operations via EF Core.
-6.  **Response Delivery**: The results are returned through the layers to the user as a rendered page or real-time SignalR update.
-
----
-
-## 6. ENVIRONMENT CONFIGURATION
-
-The system configuration is managed via `Presentation/appsettings.json`. The following parameters are required:
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=...;Database=SchoolManagementDb;..."
-  },
-  "MoMo": {
-    "PartnerCode": "MOMO",
-    "AccessKey": "...",
-    "SecretKey": "...",
-    "Endpoint": "..."
-  },
-  "Gemini": {
-    "ApiKey": "...",
-    "Model": "gemini-..."
-  }
-}
-```
+*   **Framework**: .NET 8.0 Core
+*   **Frontend**: Razor Pages, Vanilla CSS, SignalR (WebSockets)
+*   **Database**: SQL Server
+*   **ORM**: Entity Framework Core
+*   **External APIs**: Google Gemini (AI), MoMo (Payments)
+*   **Authentication**: Cookie-based Authentication
 
 ---
 
-## 7. INSTALLATION AND SETUP GUIDE
+## 5. Getting Started
 
-### Step 1: Clone the Repository
-Clone the source code to your local development environment:
+### 5.1 Prerequisites
+*   [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+*   [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) (Express or LocalDB)
+*   Optional: SSMS or Azure Data Studio for database management.
+
+### 5.2 Installation
+
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/PRN222-SE1815/PRN222-FinalProject.git
+    cd PRN222-FinalProject
+    ```
+
+2.  **Database Setup**
+    Execute the provided SQL script to initialize the schema and seed data.
+    ```bash
+    # Run this using your preferred SQL client (SSMS, sqlcmd, etc.)
+    # Path: ./PRN222_G5_finalproject.sql
+    ```
+
+3.  **Configure Connection String**
+    Open `Presentation/appsettings.json` and update the `DefaultConnection` string with your local SQL Server instance details.
+    ```json
+    "ConnectionStrings": {
+        "DefaultConnection": "Server=...;Database=SchoolManagementDb;Trusted_Connection=True;TrustServerCertificate=True;"
+    }
+    ```
+
+4.  **Run the Project**
+    ```bash
+    cd Presentation
+    dotnet run
+    ```
+    The application will default to `https://localhost:7143`.
+
+---
+
+## 6. Environment Configuration
+
+Service-specific settings are located in `appsettings.json`:
+
+*   **`Gemini:ApiKey`**: Required for AI-driven assistant features.
+*   **`MoMo:SecretKey`**: Required for payment gateway testing.
+*   **`ConnectionStrings:DefaultConnection`**: Core database configuration.
+
+---
+
+## 7. Database Setup
+
+The project uses a **Database-First** approach. Use the `PRN222_G5_finalproject.sql` file located in the root directory to create the `SchoolManagementDb` database. This script includes all table definitions, constraints, views, and initial seed data.
+
+---
+
+## 8. Sample Data
+
+The SQL script automatically seeds several test accounts. The default password for all seed accounts is **`123456`**.
+
+| Role | Username |
+|---|---|
+| Admin | `admin` |
+| Teacher | `teacher1`, `teacher2` |
+| Student | `student1`, `student2` ... `student14` |
+
+---
+
+## 9. Running the Project
+
+Navigate to the `Presentation` directory and run:
 ```bash
-git clone https://github.com/PRN222-SE1815/PRN222-FinalProject.git
-cd PRN222-FinalProject
+dotnet run
 ```
-
-### Step 2: Database Initialization
-1.  Open **SQL Server Management Studio (SSMS)** or your preferred SQL tool.
-2.  Execute the script provided in `PRN222_G5_finalproject.sql`. This will create the `SchoolManagementDb` and populate it with required seed data.
-
-### Step 3: Application Configuration
-Navigate to the `Presentation` directory and locate `appsettings.json`. Update the `DefaultConnection` string to match your SQL Server instance:
-*   Example: `Server=.;Database=SchoolManagementDb;Integrated Security=True;TrustServerCertificate=True;`
-
-### Step 4: Dependency Restoration
-Restore all NuGet packages required for the solution:
-```bash
-dotnet restore
-```
-
-### Step 5: Execute Application
-Run the web application from the root directory or the Presentation folder:
-```bash
-dotnet run --project Presentation
-```
-The application will be available at the URL provided in the console (typically `http://localhost:5000` or `https://localhost:7001`).
+Access the application via: `https://localhost:7143` (or the port shown in your terminal).
 
 ---
 
-## 8. SAMPLE DATA AND USAGE
+## 10. Useful Commands
 
-Upon successful execution, the following test accounts can be used for system verification:
-
-| Account Role | Username | Password |
-| :--- | :--- | :--- |
-| **Administrator** | `admin` | `123456` |
-| **Teacher** | `teacher1` | `123456` |
-| **Student** | `student1` | `123456` |
-
-*Note: Passwords in the database are hashed using BCrypt. The plaintext value `123456` is standard for all seed accounts.*
+*   **Build Solution**: `dotnet build`
+*   **Run Web App**: `dotnet run --project Presentation`
+*   **Restore Packages**: `dotnet restore`
+*   **Clean Temp Files**: `dotnet clean`
 
 ---
 
-## 9. AVAILABLE SCRIPTS
+## 11. Common Issues
 
-*   **`dotnet build`**: Compiles the solution and all its projects.
-*   **`dotnet run`**: Launches the web server.
-*   **`dotnet test`**: Executes unit and integration tests (if implemented).
-*   **`dotnet publish -c Release`**: Prepares the application for deployment.
+### Database Connection Failure
+Ensure your SQL Server instance is running. If you are using Windows Authentication, ensure `Integrated Security=True` is in your connection string. If using a modern SQL Server version, ensure `TrustServerCertificate=True` is specified.
 
----
+### SignalR Connection Errors
+SignalR requires `HTTPS` for modern browsers to operate correctly. If real-time notifications fail, ensure you are accessing the site via `https://`.
 
-## 10. TROUBLESHOOTING
-
-*   **Database Connection Issues**: Verify that the SQL Server service is active and that the connection string in `appsettings.json` is accurate. If using a named instance, ensure it is included (e.g., `.\SQLEXPRESS`).
-*   **NuGet Package Restoration**: If build errors occur, try deleting the `bin` and `obj` folders and running `dotnet restore` again.
-*   **HTTPS Certificate**: For local development, you may need to trust the dev certificate by running `dotnet dev-certs https --trust`.
-*   **External API Errors**: Ensure valid API keys for MoMo and Gemini are provided in the configuration if those modules are being tested.
+### Dependencies
+If you encounter build errors after a fresh clone, run `dotnet restore` from the root directory to ensure all NuGet packages are correctly pulled.
