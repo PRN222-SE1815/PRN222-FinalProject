@@ -2975,3 +2975,33 @@ SELECT
     END
 FROM CandidateAppeals ca;
 GO
+/* =============================================================
+   SEED: Programs
+   ============================================================= */
+IF NOT EXISTS (SELECT 1 FROM dbo.Programs WHERE ProgramCode = N'SE')
+BEGIN
+    INSERT INTO dbo.Programs (ProgramCode, ProgramName, IsActive)
+    VALUES (N'SE', N'Software Engineering', 1);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Programs WHERE ProgramCode = N'AI')
+BEGIN
+    INSERT INTO dbo.Programs (ProgramCode, ProgramName, IsActive)
+    VALUES (N'AI', N'Artificial Intelligence', 1);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Programs WHERE ProgramCode = N'BA')
+BEGIN
+    INSERT INTO dbo.Programs (ProgramCode, ProgramName, IsActive)
+    VALUES (N'BA', N'Business Administration', 1);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Programs WHERE ProgramCode = N'GD')
+BEGIN
+    INSERT INTO dbo.Programs (ProgramCode, ProgramName, IsActive)
+    VALUES (N'GD', N'Graphic Design', 1);
+END
+GO
