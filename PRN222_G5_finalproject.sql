@@ -3005,3 +3005,72 @@ BEGIN
     VALUES (N'GD', N'Graphic Design', 1);
 END
 GO
+
+
+/* =============================================================
+   SEED: CoursePrerequisites
+   NOTE:
+   - Requires dbo.Courses already seeded.
+   - Uses CourseCode mapping -> CourseId to avoid hard-coded IDs.
+   - Only inserts when both course codes exist and relation not exists.
+   ============================================================= */
+
+-- CS201 requires CS101
+INSERT INTO dbo.CoursePrerequisites (CourseId, PrerequisiteCourseId)
+SELECT cMain.CourseId, cPre.CourseId
+FROM dbo.Courses cMain
+JOIN dbo.Courses cPre ON 1 = 1
+WHERE cMain.CourseCode = N'CS201'
+  AND cPre.CourseCode  = N'CS101'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM dbo.CoursePrerequisites cp
+      WHERE cp.CourseId = cMain.CourseId
+        AND cp.PrerequisiteCourseId = cPre.CourseId
+  );
+GO
+
+-- CS301 requires CS201
+INSERT INTO dbo.CoursePrerequisites (CourseId, PrerequisiteCourseId)
+SELECT cMain.CourseId, cPre.CourseId
+FROM dbo.Courses cMain
+JOIN dbo.Courses cPre ON 1 = 1
+WHERE cMain.CourseCode = N'CS301'
+  AND cPre.CourseCode  = N'CS201'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM dbo.CoursePrerequisites cp
+      WHERE cp.CourseId = cMain.CourseId
+        AND cp.PrerequisiteCourseId = cPre.CourseId
+  );
+GO
+
+-- AI201 requires MATH101
+INSERT INTO dbo.CoursePrerequisites (CourseId, PrerequisiteCourseId)
+SELECT cMain.CourseId, cPre.CourseId
+FROM dbo.Courses cMain
+JOIN dbo.Courses cPre ON 1 = 1
+WHERE cMain.CourseCode = N'AI201'
+  AND cPre.CourseCode  = N'MATH101'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM dbo.CoursePrerequisites cp
+      WHERE cp.CourseId = cMain.CourseId
+        AND cp.PrerequisiteCourseId = cPre.CourseId
+  );
+GO
+
+-- AI301 requires AI201
+INSERT INTO dbo.CoursePrerequisites (CourseId, PrerequisiteCourseId)
+SELECT cMain.CourseId, cPre.CourseId
+FROM dbo.Courses cMain
+JOIN dbo.Courses cPre ON 1 = 1
+WHERE cMain.CourseCode = N'AI301'
+  AND cPre.CourseCode  = N'AI201'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM dbo.CoursePrerequisites cp
+      WHERE cp.CourseId = cMain.CourseId
+        AND cp.PrerequisiteCourseId = cPre.CourseId
+  );
+GO
